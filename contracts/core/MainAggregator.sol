@@ -6,18 +6,19 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./VerificationToken.sol";
 import "./VerificationSBT.sol";
+import "../interfaces/IHumanityOracle.sol";
 
-contract MainAggregator is Ownable, ReentrancyGuard, Pausable {
+contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
     
     VerificationToken public immutable verificationToken;
     VerificationSBT public immutable verificationSBT;
+    address public immutable treasuryAddress;
     mapping(address => bool) public isAdapter;
     mapping(address => uint8) public adapterToSource;
     mapping(address => VerificationData[]) public userVerifications;
     mapping(bytes32 => bool) public usedUniqueIds;
     
-    uint256 public constant BASE_SCORE = 10;
-    uint256 public constant TOKEN_REWARD = 100 * 10**18;
+    uint256 public constant TOKEN_REWARD = 1 * 10**18;
     
     struct VerificationData {
         uint8 source;
@@ -37,19 +38,19 @@ contract MainAggregator is Ownable, ReentrancyGuard, Pausable {
         uint256 sbtTokenId,
         uint256 timestamp
     );
-    event VerificationRevoked(address indexed user, uint256 tokenId, string reason);
+    event TokensRevoked(address indexed user, uint256 amount);
     event AdapterAdded(address indexed adapter, uint8 sourceId);
     event AdapterRemoved(address indexed adapter);
     
-    constructor(address _tokenAddr, address _sbtAddr) Ownable(msg.sender) {
-        if (_tokenAddr == address(0) || _sbtAddr == address(0)) {
+    constructor(address _tokenAddr, address _sbtAddr, address _treasury) Ownable(msg.sender) {
+        if (_tokenAddr == address(0) || _sbtAddr == address(0) || _treasury == address(0)) {
             revert InvalidAddress();
         }
         
         verificationToken = VerificationToken(_tokenAddr);
         verificationSBT = VerificationSBT(_sbtAddr);
+        treasuryAddress = _treasury;
     }
-    
     // verification from authorized adapter
     // within CEI pattern
     function registerVerification(
@@ -73,6 +74,7 @@ contract MainAggregator is Ownable, ReentrancyGuard, Pausable {
         }));
 
         verificationToken.mint(user, TOKEN_REWARD);
+        verificationToken.mint(treasuryAddress, TOKEN_REWARD);
         verificationSBT.mint(user, source, uniqueId);
         
         emit VerificationRegistered(
@@ -96,28 +98,13 @@ contract MainAggregator is Ownable, ReentrancyGuard, Pausable {
     }
     
     // check if user has at least 1 SBT
-    function isVerifiedHuman(address user) external view returns (bool) {
-        return verificationSBT.balanceOf(user) > 0;
+    function isVerifiedHuman(address _address) external view returns (bool) {
+        return verificationSBT.balanceOf(_address) > 0;
     }
     
-    // calculate trust score
-    function getTrustScore(address user) external view returns (uint256) {
-        uint256 count = userVerifications[user].length;
-        if (count == 0) return 0;
-        
-        uint256 score = BASE_SCORE * count;
-        
-        // time bonus: +2 per month since first verification
-        uint256 firstVerifTime = userVerifications[user][0].timestamp;
-        uint256 monthsPassed = (block.timestamp - firstVerifTime) / 30 days;
-        score += monthsPassed * 2;
-        
-        // multi-source bonus: +5 if more than 1 source
-        if (count > 1) {
-            score += 5;
-        }
-        
-        return score;
+    // trust score based on ERC-20 balance
+    function getTrustScore(address _address) external view returns (uint256) {
+        return verificationToken.balanceOf(_address) / (1 * 10**18);
     }
     
     // get verification count for user
@@ -125,16 +112,13 @@ contract MainAggregator is Ownable, ReentrancyGuard, Pausable {
         return userVerifications[user].length;
     }
     
-    function revokeVerification(
-        address user,
-        uint256 tokenId,
-        string calldata reason
-    ) external onlyOwner nonReentrant {
+    // revoke ERC-20 tokens if user compromised 
+    function revokeTokens(address user, uint256 amount) external onlyOwner nonReentrant {
         if (user == address(0)) revert InvalidAddress();
         
-        verificationSBT.burn(tokenId);
+        verificationToken.burnFrom(user, amount);
         
-        emit VerificationRevoked(user, tokenId, reason);
+        emit TokensRevoked(user, amount);
     }
     
     // emergency stop

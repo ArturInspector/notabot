@@ -4,6 +4,8 @@ Main contract structure
 Basic verification logic
 Storage mappings
 Access control (Ownable)
+
+
 Phase 2: Integrations & Features
 Adapter contracts (Worldcoin, Gitcoin, PoH)
 Signature verification (ECDSA)

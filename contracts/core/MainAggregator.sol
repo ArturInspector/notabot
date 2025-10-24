@@ -37,6 +37,7 @@ contract MainAggregator is Ownable, ReentrancyGuard, Pausable {
         uint256 sbtTokenId,
         uint256 timestamp
     );
+    event VerificationRevoked(address indexed user, uint256 tokenId, string reason);
     event AdapterAdded(address indexed adapter, uint8 sourceId);
     event AdapterRemoved(address indexed adapter);
     
@@ -60,7 +61,6 @@ contract MainAggregator is Ownable, ReentrancyGuard, Pausable {
         if (!isAdapter[msg.sender]) revert UnauthorizedAdapter();
         if (user == address(0)) revert InvalidAddress();
         if (usedUniqueIds[uniqueId]) revert DuplicateVerification();
-        
         usedUniqueIds[uniqueId] = true;
         
         uint256 sbtTokenId = verificationSBT.totalSupply();
@@ -93,5 +93,65 @@ contract MainAggregator is Ownable, ReentrancyGuard, Pausable {
         adapterToSource[adapter] = sourceId;
         
         emit AdapterAdded(adapter, sourceId);
+    }
+    
+    // check if user has at least 1 SBT
+    function isVerifiedHuman(address user) external view returns (bool) {
+        return verificationSBT.balanceOf(user) > 0;
+    }
+    
+    // calculate trust score
+    function getTrustScore(address user) external view returns (uint256) {
+        uint256 count = userVerifications[user].length;
+        if (count == 0) return 0;
+        
+        uint256 score = BASE_SCORE * count;
+        
+        // time bonus: +2 per month since first verification
+        uint256 firstVerifTime = userVerifications[user][0].timestamp;
+        uint256 monthsPassed = (block.timestamp - firstVerifTime) / 30 days;
+        score += monthsPassed * 2;
+        
+        // multi-source bonus: +5 if more than 1 source
+        if (count > 1) {
+            score += 5;
+        }
+        
+        return score;
+    }
+    
+    // get verification count for user
+    function getVerificationCount(address user) external view returns (uint256) {
+        return userVerifications[user].length;
+    }
+    
+    function revokeVerification(
+        address user,
+        uint256 tokenId,
+        string calldata reason
+    ) external onlyOwner nonReentrant {
+        if (user == address(0)) revert InvalidAddress();
+        
+        verificationSBT.burn(tokenId);
+        
+        emit VerificationRevoked(user, tokenId, reason);
+    }
+    
+    // emergency stop
+    function pause() external onlyOwner {
+        _pause();
+    }
+    
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    function removeAdapter(address adapter) external onlyOwner {
+        if (adapter == address(0)) revert InvalidAddress();
+        
+        isAdapter[adapter] = false;
+        delete adapterToSource[adapter];
+        
+        emit AdapterRemoved(adapter);
     }
 }

@@ -22,6 +22,15 @@ cache/
 artifacts/
 typechain-types/
 
+# видео
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+/sparks-bg.mp4
+/public/sparks-bg.mp4
+
 # Logs
 *.log
 npm-debug.log*

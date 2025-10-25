@@ -7,7 +7,7 @@ import styles from "./page.module.css";
 import { Button, Card, Col, Row, Tag } from "antd";
 import { type Variants, animate, easeOut, motion } from "framer-motion";
 import type { NextPage } from "next";
-import { useAccount } from "wagmi";
+import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import toast, { Toaster } from "react-hot-toast";
 import { BACKEND_URL, getJson, postJson } from "../utils/api";
@@ -17,13 +17,9 @@ import { writeContract } from "wagmi/actions";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 import { Rocket } from "~~/src/assets/images";
 import { IDKitWidget, ISuccessResult } from "@worldcoin/idkit";
-
 import { decodeAbiParameters, encodeAbiParameters, parseAbiParameters } from "viem";
 
-type U256x8 = readonly [
-  bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint
-];
-
+type U256x8 = readonly [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
 
 type CounterProps = {
   to: number;
@@ -78,69 +74,75 @@ type DemoResponse = {
 };
 
 const WORLDCOIN_ADAPTER_ADDRESS = (process.env.NEXT_PUBLIC_WC_ADAPTER || "") as `0x${string}`;
-const WORLDCOIN_APP_ID = process.env.NEXT_PUBLIC_WC_APP_ID || "" as any;
+const WORLDCOIN_APP_ID = (process.env.NEXT_PUBLIC_WC_APP_ID || "") as any;
 const WORLDCOIN_ACTION = process.env.NEXT_PUBLIC_WC_ACTION || "verify-human";
-const DEMO_MODE = String(process.env.NEXT_PUBLIC_DEMO_MODE || "").toLowerCase() === "true";
+
+const TARGET_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 84532) as any;
+const EXPLORER_TX = process.env.NEXT_PUBLIC_EXPLORER_TX || "https://sepolia.basescan.org/tx/";
 
 const Home: NextPage = () => {
   const { isConnected, address } = useAccount();
+  const chainId = useChainId();
+  const { switchChainAsync } = useSwitchChain();
   const { openConnectModal } = useConnectModal();
-  const [loading, setLoading] = React.useState(false);
+  const [loadingWorld, setLoadingWorld] = React.useState(false);
+  const [loadingAgg, setLoadingAgg] = React.useState(false);
+  const [aggVerified, setAggVerified] = React.useState(false);
   const worldcoinOpenRef = React.useRef<(() => void) | null>(null);
 
   React.useEffect(() => {
     getJson(`${BACKEND_URL}/health`).catch(() => {});
   }, []);
 
-  const requireAddress = React.useCallback(() => {
+  React.useEffect(() => {
+    const v = typeof window !== "undefined" ? window.localStorage.getItem("agg_verified") : null;
+    setAggVerified(v === "true");
+  }, []);
+
+  const markAggVerified = React.useCallback(() => {
+    if (typeof window !== "undefined") window.localStorage.setItem("agg_verified", "true");
+    setAggVerified(true);
+  }, []);
+
+  const ensureReady = React.useCallback(async () => {
     if (!isConnected || !address) {
       openConnectModal?.();
       throw new Error("wallet_not_connected");
     }
+    if (chainId !== TARGET_CHAIN_ID) {
+      await switchChainAsync?.({ chainId: TARGET_CHAIN_ID });
+    }
     return address as `0x${string}`;
-  }, [isConnected, address, openConnectModal]);
+  }, [isConnected, address, chainId, switchChainAsync, openConnectModal]);
 
   const onConnectClick = () => {
-    if (!isConnected) {
-      openConnectModal?.();
-      return;
-    }
+    if (!isConnected) openConnectModal?.();
   };
 
   const verifySource = async (source: "gitcoin" | "poh" | "brightid") => {
-    const addr = requireAddress();
-    const path = DEMO_MODE ? "/api/demo/verify" : `/api/${source}/verify`;
-    const body = DEMO_MODE ? { userAddress: addr, source } : { userAddress: addr };
-    const res = await postJson<DemoResponse>(path, body);
+    const addr = await ensureReady();
+    const res = await postJson<DemoResponse>("/api/demo/verify", { userAddress: addr, source });
     if (!res.success) throw new Error("verification_failed");
     return res.data;
   };
 
   const writeWorldcoinOnChain = async (user: `0x${string}`, result: ISuccessResult) => {
-    const [decoded] = decodeAbiParameters(
-      [{ type: "uint256[8]" }],
-      result.proof as `0x${string}`
-    ) as unknown as [readonly bigint[]];
-
-    if (decoded.length !== 8) throw new Error("Invalid Worldcoin proof length");
+    if (!WORLDCOIN_ADAPTER_ADDRESS) throw new Error("missing_worldcoin_adapter");
+    const [decoded] = decodeAbiParameters([{ type: "uint256[8]" }], result.proof as `0x${string}`) as unknown as [readonly bigint[]];
+    if (decoded.length !== 8) throw new Error("invalid_wc_proof");
     const proof8 = decoded as U256x8;
-
-    const proofPacked = encodeAbiParameters(
-      parseAbiParameters("uint256, uint256, uint256[8]"),
-      [BigInt(result.merkle_root), BigInt(result.nullifier_hash), proof8],
-    );
-
-    if (WORLDCOIN_ADAPTER_ADDRESS) {
-      await writeContract(wagmiConfig, {
-        abi: VERIFY_AND_REGISTER_ABI,
-        address: WORLDCOIN_ADAPTER_ADDRESS,
-        functionName: "verifyAndRegister",
-        args: [user, proofPacked as `0x${string}`],
-      });
-    }
+    const proofPacked = encodeAbiParameters(parseAbiParameters("uint256, uint256, uint256[8]"), [BigInt(result.merkle_root), BigInt(result.nullifier_hash), proof8]);
+    const hash = await writeContract(wagmiConfig, {
+      abi: VERIFY_AND_REGISTER_ABI,
+      address: WORLDCOIN_ADAPTER_ADDRESS,
+      functionName: "verifyAndRegister",
+      args: [user, proofPacked as `0x${string}`],
+      chainId: TARGET_CHAIN_ID,
+    });
+    return hash;
   };
 
-  const submitOnChain = async (user: `0x${string}`, gitcoin: DemoData, poh: DemoData, brightid: DemoData) => {
+  const submitAggregatorsOnChain = async (user: `0x${string}`, gitcoin: DemoData, poh: DemoData, brightid: DemoData) => {
     const gitcoinProof = encodeGitcoinProof({
       userId: (gitcoin.userId || "0x0000000000000000000000000000000000000000000000000000000000000000") as `0x${string}`,
       score: gitcoin.score ?? 0,
@@ -157,51 +159,72 @@ const Home: NextPage = () => {
       timestamp: brightid.timestamp,
       signature: brightid.signature,
     });
-
-    if (GITCOIN_ADAPTER_ADDRESS) {
-      await writeContract(wagmiConfig, {
-        abi: VERIFY_AND_REGISTER_ABI,
-        address: GITCOIN_ADAPTER_ADDRESS,
-        functionName: "verifyAndRegister",
-        args: [user, gitcoinProof],
-      });
-    }
-    if (POH_ADAPTER_ADDRESS) {
-      await writeContract(wagmiConfig, {
-        abi: VERIFY_AND_REGISTER_ABI,
-        address: POH_ADAPTER_ADDRESS,
-        functionName: "verifyAndRegister",
-        args: [user, pohProof],
-      });
-    }
-    if (BRIGHTID_ADAPTER_ADDRESS) {
-      await writeContract(wagmiConfig, {
-        abi: VERIFY_AND_REGISTER_ABI,
-        address: BRIGHTID_ADAPTER_ADDRESS,
-        functionName: "verifyAndRegister",
-        args: [user, brightIdProof],
-      });
-    }
+    const tx1 = await writeContract(wagmiConfig, {
+      abi: VERIFY_AND_REGISTER_ABI,
+      address: GITCOIN_ADAPTER_ADDRESS,
+      functionName: "verifyAndRegister",
+      args: [user, gitcoinProof],
+      chainId: TARGET_CHAIN_ID,
+    });
+    const tx2 = await writeContract(wagmiConfig, {
+      abi: VERIFY_AND_REGISTER_ABI,
+      address: POH_ADAPTER_ADDRESS,
+      functionName: "verifyAndRegister",
+      args: [user, pohProof],
+      chainId: TARGET_CHAIN_ID,
+    });
+    const tx3 = await writeContract(wagmiConfig, {
+      abi: VERIFY_AND_REGISTER_ABI,
+      address: BRIGHTID_ADAPTER_ADDRESS,
+      functionName: "verifyAndRegister",
+      args: [user, brightIdProof],
+      chainId: TARGET_CHAIN_ID,
+    });
+    return [tx1, tx2, tx3] as const;
   };
 
-  const handleWorldcoinAndAll = React.useCallback(() => {
+  const handleWorldcoinClick = React.useCallback(() => {
     worldcoinOpenRef.current?.();
   }, []);
 
   const onWorldcoinSuccess = async (result: ISuccessResult) => {
-    setLoading(true);
-    const t = toast.loading("Verifying Worldcoin and backend sources…");
+    setLoadingWorld(true);
+    const t = toast.loading("Verifying with World ID…");
     try {
-      const user = requireAddress();
-      await writeWorldcoinOnChain(user, result);
-      const [gitcoin, poh, brightid] = await Promise.all([verifySource("gitcoin"), verifySource("poh"), verifySource("brightid")]);
-      await submitOnChain(user, gitcoin, poh, brightid);
-      toast.success("Verification complete");
-    } catch {
-      toast.error("Verification failed");
+      const user = await ensureReady();
+      const hash = await writeWorldcoinOnChain(user, result);
+      toast.success(`World ID verified`);
+      toast.success(`Tx: ${hash.slice(0, 10)}…`, { icon: "🔗" });
+      if (EXPLORER_TX) window.open(`${EXPLORER_TX}${hash}`, "_blank");
+    } catch (e: any) {
+      const msg = e?.shortMessage || e?.message || "World ID verification failed";
+      toast.error(msg);
     } finally {
       toast.dismiss(t);
-      setLoading(false);
+      setLoadingWorld(false);
+    }
+  };
+
+  const handleVerifyAggregators = async () => {
+    if (aggVerified) return;
+    setLoadingAgg(true);
+    const t = toast.loading("Verifying Gitcoin, PoH, BrightID…");
+    try {
+      const user = await ensureReady();
+      const [gitcoin, poh, brightid] = await Promise.all([verifySource("gitcoin"), verifySource("poh"), verifySource("brightid")]);
+      const hashes = await submitAggregatorsOnChain(user, gitcoin, poh, brightid);
+      markAggVerified();
+      toast.success("Verification complete. Tokens minted");
+      hashes.forEach(h => {
+        toast.success(`Tx: ${h.slice(0, 10)}…`, { icon: "🔗" });
+        if (EXPLORER_TX) window.open(`${EXPLORER_TX}${h}`, "_blank");
+      });
+    } catch (e: any) {
+      const msg = e?.shortMessage || e?.message || "Verification failed";
+      toast.error(msg);
+    } finally {
+      toast.dismiss(t);
+      setLoadingAgg(false);
     }
   };
 
@@ -235,21 +258,36 @@ const Home: NextPage = () => {
 
       <section className={styles.section} id="verify">
         <div className={styles.container}>
-          <h2 className={styles.h2Center}>Verify And Claim</h2>
+          <h2 className={styles.h2Center}>Verify</h2>
           <Row gutter={[16, 16]} justify="center">
-            <Col xs={24} sm={18} md={12}>
+            <Col xs={24} sm={18} md={10}>
               <Card className={styles.valueCard}>
-                <h3 className={styles.h3}>All Providers</h3>
+                <h3 className={styles.h3}>World ID</h3>
                 <IDKitWidget app_id={WORLDCOIN_APP_ID} action={WORLDCOIN_ACTION} onSuccess={onWorldcoinSuccess}>
                   {({ open }) => {
                     worldcoinOpenRef.current = open;
                     return (
-                      <Button block size="large" type="primary" loading={loading} onClick={handleWorldcoinAndAll}>
-                        Verify All & Claim
+                      <Button block size="large" type="primary" loading={loadingWorld} onClick={handleWorldcoinClick}>
+                        Verify with World ID
                       </Button>
                     );
                   }}
                 </IDKitWidget>
+              </Card>
+            </Col>
+            <Col xs={24} sm={18} md={10}>
+              <Card className={styles.valueCard}>
+                <h3 className={styles.h3}>Gitcoin • PoH • BrightID</h3>
+                <Button
+                  block
+                  size="large"
+                  type="primary"
+                  loading={loadingAgg}
+                  disabled={aggVerified}
+                  onClick={handleVerifyAggregators}
+                >
+                  {aggVerified ? <span style={{ color: "green" }}>Already Verified</span> : "Verify Aggregators (Demo)"}
+                </Button>
               </Card>
             </Col>
           </Row>

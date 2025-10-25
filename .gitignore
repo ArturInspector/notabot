@@ -1,56 +1,24 @@
-# Dependencies
-node_modules/
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+# dependencies
+node_modules
 
+# yarn
+.yarn/*
+!.yarn/patches
+!.yarn/sdks
+!.yarn/versions
 
-.env
-.env.local
-.env.*.local
+# eslint
+.eslintcache
 
-# Build outputs
-dist/
-build/
-.next/
-out/
-
-.cursor/
-
-# Hardhat
-cache/
-artifacts/
-typechain-types/
-
-# видео
-*.mp4
-*.mov
-*.avi
-*.mkv
-*.webm
-/sparks-bg.mp4
-/public/sparks-bg.mp4
-
-# Logs
-*.log
-npm-debug.log*
+# misc
+.DS_Store
 
 # IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+.vscode
+.idea
 
-# OS
-.DS_Store
-Thumbs.db
+# cli
+dist
 
-# Testing
-coverage/
-.coverage
-
-PLAN.md
-IDEA.MD
 MAIN_IDEA.MD
-SAFE.MD
-ARCHITECTURE.MD
+.env*

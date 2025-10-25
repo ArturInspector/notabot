@@ -1,4 +1,3 @@
-// app/docs/page.tsx
 "use client";
 import React from "react";
 import styles from "./page.module.css";
@@ -71,7 +70,7 @@ export default function Docs() {
       >
         <div className={styles.brand}>
           <div className={styles.brandTitle}>NotABot Docs</div>
-          <div className={styles.brandSub}>Ethereum dev stack</div>
+          <div className={styles.brandSub}>Sybil-resistant contracts</div>
         </div>
         <Menu
           theme="dark"
@@ -97,14 +96,14 @@ export default function Docs() {
                         NotABot Integration Guide
                       </Title>
                       <Paragraph className={styles.lead}>
-                        One verification, access to Worldcoin, Gitcoin Passport,
-                        Proof of Humanity, BrightID. Integrate once and ship
-                        Sybil-resistant apps.
+                        Like OpenZeppelin, but for sybil resistance. Copy HumanityProtected mixin from GitHub, 
+                        add onlyHuman modifier, protect your contracts from bots. 
+                        Aggregates Worldcoin, Gitcoin Passport, BrightID on Base L2.
                       </Paragraph>
                       <Space wrap>
-                        <Tag className={styles.tagPrimary}>Base</Tag>
-                        <Tag className={styles.tagSoft}>Main Aggregator</Tag>
-                        <Tag className={styles.tagMono}>0x...YOUR_ADDRESS</Tag>
+                        <Tag className={styles.tagPrimary}>Base Sepolia</Tag>
+                        <Tag className={styles.tagSoft}>Abstract Mixin</Tag>
+                        <Tag className={styles.tagMono}>git clone</Tag>
                       </Space>
                       <div className={styles.ctaRow}>
                         <Link href="#quickstart">
@@ -113,12 +112,12 @@ export default function Docs() {
                             type="primary"
                             className={styles.btnPrimary}
                           >
-                            Start in 2 steps
+                            Quick Start
                           </Button>
                         </Link>
-                        <Link href="#api">
+                        <Link href="#examples">
                           <Button size="large" className={styles.btnGhost}>
-                            API
+                            Examples
                           </Button>
                         </Link>
                       </div>
@@ -138,23 +137,27 @@ export default function Docs() {
                   <Col xs={24} md={12}>
                     <Card className={styles.stepCard}>
                       <Title level={4} className={styles.h4}>
-                        1. Import the interface
+                        1. Clone & Copy
                       </Title>
                       <pre className={styles.code}>
-                        <code>{`interface IHumanityOracle {
-  function isVerifiedHuman(address) external view returns (bool);
-  function getTrustScore(address) external view returns (uint256);
-}`}</code>
+                        <code>{`git clone https://github.com/your/repo
+cp packages/hardhat/contracts/base/HumanityProtected.sol .
+cp packages/hardhat/contracts/interfaces/IHumanityOracle.sol .`}</code>
                       </pre>
                     </Card>
                   </Col>
                   <Col xs={24} md={12}>
                     <Card className={styles.stepCard}>
                       <Title level={4} className={styles.h4}>
-                        2. Call the contract
+                        2. Inherit & Use
                       </Title>
                       <pre className={styles.code}>
-                        <code>{`bool ok = IHumanityOracle(0xYOUR_ADDRESS).isVerifiedHuman(msg.sender);`}</code>
+                        <code>{`import "./HumanityProtected.sol";
+
+contract MyGame is HumanityProtected {
+  constructor() HumanityProtected(ORACLE_ADDR) {}
+  function play() external onlyHuman { }
+}`}</code>
                       </pre>
                     </Card>
                   </Col>
@@ -165,13 +168,27 @@ export default function Docs() {
             <section id="solidity" className={styles.section}>
               <motion.div variants={fadeUp}>
                 <Title level={2} className={styles.h2}>
-                  Solidity Interface
+                  Solidity Integration
                 </Title>
                 <Card className={styles.codeCard}>
                   <pre className={styles.codeLg}>
-                    <code>{`interface IHumanityOracle {
-  function isVerifiedHuman(address user) external view returns (bool);
-  function getTrustScore(address user) external view returns (uint256);
+                    <code>{`import "./HumanityProtected.sol";
+
+// MainAggregator on Base Sepolia
+address constant ORACLE = 0x8Cec9277d761f947e29EBeACc4035DDCDB10c2BD;
+
+contract YourContract is HumanityProtected {
+    constructor() HumanityProtected(ORACLE) {}
+    
+    // Only verified humans can call
+    function protectedFunction() external onlyHuman {
+        // your logic
+    }
+    
+    // Require minimum trust score (2+ verifications)
+    function premiumFeature() external minTrustScore(2) {
+        // requires 2+ sources
+    }
 }`}</code>
                   </pre>
                 </Card>
@@ -192,9 +209,10 @@ export default function Docs() {
                       children: (
                         <Card className={styles.codeCard}>
                           <pre className={styles.codeLg}>
-                            <code>{`function mint() external {
-  require(IHumanityOracle(0xYOUR_ADDRESS).isVerifiedHuman(msg.sender));
-  _safeMint(msg.sender, nextTokenId++);
+                            <code>{`contract GameNFT is ERC721, HumanityProtected {
+  function mint() external onlyHuman {
+    _safeMint(msg.sender, nextTokenId++);
+  }
 }`}</code>
                           </pre>
                         </Card>
@@ -206,9 +224,10 @@ export default function Docs() {
                       children: (
                         <Card className={styles.codeCard}>
                           <pre className={styles.codeLg}>
-                            <code>{`function queueRanked() external {
-  require(IHumanityOracle(0xYOUR_ADDRESS).getTrustScore(msg.sender) >= 1);
-  _enqueue(msg.sender);
+                            <code>{`contract RankedGame is HumanityProtected {
+  function queueRanked() external minTrustScore(1) {
+    _enqueue(msg.sender);
+  }
 }`}</code>
                           </pre>
                         </Card>
@@ -220,9 +239,10 @@ export default function Docs() {
                       children: (
                         <Card className={styles.codeCard}>
                           <pre className={styles.codeLg}>
-                            <code>{`function claim() external {
-  require(IHumanityOracle(0xYOUR_ADDRESS).isVerifiedHuman(msg.sender));
-  _distribute(msg.sender);
+                            <code>{`contract Airdrop is HumanityProtected {
+  function claim() external onlyHuman {
+    token.transfer(msg.sender, AMOUNT);
+  }
 }`}</code>
                           </pre>
                         </Card>
@@ -234,10 +254,11 @@ export default function Docs() {
                       children: (
                         <Card className={styles.codeCard}>
                           <pre className={styles.codeLg}>
-                            <code>{`function vote(uint256 proposalId, uint8 choice) external {
-  uint256 score = IHumanityOracle(0xYOUR_ADDRESS).getTrustScore(msg.sender);
-  uint256 weight = 1 + score;
-  _vote(msg.sender, proposalId, choice, weight);
+                            <code>{`contract DAO is HumanityProtected {
+  function vote(uint256 id) external onlyHuman {
+    uint256 weight = _getHumanityWeight(msg.sender);
+    _castVote(msg.sender, id, weight);
+  }
 }`}</code>
                           </pre>
                         </Card>
@@ -249,9 +270,10 @@ export default function Docs() {
                       children: (
                         <Card className={styles.codeCard}>
                           <pre className={styles.codeLg}>
-                            <code>{`function listItem(uint256 id, uint256 price) external {
-  require(IHumanityOracle(0xYOUR_ADDRESS).getTrustScore(msg.sender) >= 2);
-  _list(msg.sender, id, price);
+                            <code>{`contract Market is HumanityProtected {
+  function listItem(uint256 id) external minTrustScore(2) {
+    _list(msg.sender, id);
+  }
 }`}</code>
                           </pre>
                         </Card>
@@ -271,38 +293,40 @@ export default function Docs() {
                   <Col xs={24} md={12}>
                     <Card className={styles.apiCard}>
                       <Title level={4} className={styles.h4}>
-                        isVerifiedHuman
+                        onlyHuman
                       </Title>
                       <Paragraph className={styles.dim}>
-                        isVerifiedHuman(address user) → bool
+                        modifier onlyHuman
                       </Paragraph>
                       <Paragraph className={styles.di1}>
-                        Returns true if the user is verified by at least one
-                        provider.
+                        Restricts function to verified humans only. Reverts if caller has 0 verifications.
                       </Paragraph>
                       <Divider className={styles.divider} />
                       <Paragraph className={styles.dim}>Example</Paragraph>
                       <pre className={styles.code}>
-                        <code>{`require(IHumanityOracle(0xYOUR_ADDRESS).isVerifiedHuman(msg.sender));`}</code>
+                        <code>{`function mint() external onlyHuman {
+  _mint(msg.sender);
+}`}</code>
                       </pre>
                     </Card>
                   </Col>
                   <Col xs={24} md={12}>
                     <Card className={styles.apiCard}>
                       <Title level={4} className={styles.h4}>
-                        getTrustScore
+                        minTrustScore
                       </Title>
                       <Paragraph className={styles.dim}>
-                        getTrustScore(address user) → uint256 (0–4)
+                        modifier minTrustScore(uint256)
                       </Paragraph>
                       <Paragraph className={styles.di1}>
-                        Number of distinct verifications aggregated for the
-                        user.
+                        Requires minimum number of verifications. Trust score = HMT token balance.
                       </Paragraph>
                       <Divider className={styles.divider} />
                       <Paragraph className={styles.dim}>Example</Paragraph>
                       <pre className={styles.code}>
-                        <code>{`require(IHumanityOracle(0xYOUR_ADDRESS).getTrustScore(msg.sender) >= 2);`}</code>
+                        <code>{`function premium() external minTrustScore(2) {
+  // requires 2+ verifications
+}`}</code>
                       </pre>
                     </Card>
                   </Col>
@@ -317,46 +341,44 @@ export default function Docs() {
                 </Title>
                 <Card className={styles.noteCard}>
                   <Row gutter={[16, 16]}>
-                    <Col xs={24} md={12}>
+                    <Col xs={24}>
                       <Paragraph className={styles.dim}>
                         <Text className={styles.di1} strong>
-                          Deployed Network:
+                          Network:
                         </Text>{" "}
-                        Base
+                        Base Sepolia Testnet (Chain ID: 84532)
                       </Paragraph>
                       <Paragraph className={styles.dim}>
                         <Text className={styles.di1} strong>
-                          Aggregator:
+                          MainAggregator:
                         </Text>{" "}
                         <Text className={styles.di1} code>
-                          0x...YOUR_ADDRESS
+                          0x8Cec9277d761f947e29EBeACc4035DDCDB10c2BD
                         </Text>
                       </Paragraph>
+                    </Col>
+                    <Col xs={24} md={8}>
                       <Paragraph className={styles.dim}>
                         <Text className={styles.di1} strong>
-                          Average Gas:
+                          Check Gas:
                         </Text>{" "}
-                        ~2,300 gas per check
+                        ~2,300 gas
                       </Paragraph>
                     </Col>
-                    <Col xs={24} md={12}>
+                    <Col xs={24} md={8}>
                       <Paragraph className={styles.dim}>
                         <Text className={styles.di1} strong>
-                          USD Cost (Base):
+                          Cost:
                         </Text>{" "}
                         ~$0.0001 per check
                       </Paragraph>
+                    </Col>
+                    <Col xs={24} md={8}>
                       <Paragraph className={styles.dim}>
                         <Text className={styles.di1} strong>
-                          Latency:
+                          Type:
                         </Text>{" "}
-                        Single read-only view call
-                      </Paragraph>
-                      <Paragraph className={styles.dim}>
-                        <Text className={styles.di1} strong>
-                          Privacy:
-                        </Text>{" "}
-                        No personal data stored on-chain
+                        View call (read-only)
                       </Paragraph>
                     </Col>
                   </Row>

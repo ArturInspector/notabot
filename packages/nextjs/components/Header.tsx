@@ -1,16 +1,14 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-// import { hardhat } from "viem/chains";
 import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
-// import {
-//   FaucetButton,
-//   RainbowKitCustomConnectButton,
-// } from "~~/components/scaffold-eth";
-// import {  useTargetNetwork } from "~~/hooks/scaffold-eth";
 import { useOutsideClick } from "~~/hooks/scaffold-eth";
+import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth/RainbowKitCustomConnectButton";
+import { useAccount, useReadContract } from "wagmi";
+import { formatUnits } from "viem";
+import { ERC20_READ_ABI, HMT_ADDRESS, HMT_DECIMALS, HMT_SYMBOL } from "../utils/contracts";
 
 type HeaderMenuLink = {
   label: string;
@@ -19,20 +17,12 @@ type HeaderMenuLink = {
 };
 
 export const menuLinks: HeaderMenuLink[] = [
-  {
-    label: "Home",
-    href: "/",
-  },
-  {
-    label: "Debug Contracts",
-    href: "/debug",
-    icon: <BugAntIcon className="h-4 w-4" />,
-  },
+  { label: "Home", href: "/" },
+  { label: "Debug Contracts", href: "/debug", icon: <BugAntIcon className="h-4 w-4" /> },
 ];
 
 export const HeaderMenuLinks = () => {
   const pathname = usePathname();
-
   return (
     <>
       {menuLinks.map(({ label, href, icon }) => {
@@ -42,9 +32,7 @@ export const HeaderMenuLinks = () => {
             <Link
               href={href}
               passHref
-              className={`${
-                isActive ? "bg-secondary shadow-md" : ""
-              } hover:bg-secondary hover:shadow-md focus:!bg-secondary active:!text-neutral py-1.5 px-3 text-sm rounded-full gap-2 grid grid-flow-col`}
+              className={`${isActive ? "bg-secondary shadow-md" : ""} hover:bg-secondary hover:shadow-md focus:!bg-secondary active:!text-neutral py-1.5 px-3 text-sm rounded-full gap-2 grid grid-flow-col`}
             >
               {icon}
               <span>{label}</span>
@@ -56,17 +44,27 @@ export const HeaderMenuLinks = () => {
   );
 };
 
-/**
- * Site header
- */
 export const Header = () => {
-  // const { targetNetwork } = useTargetNetwork();
-  // const isLocalNetwork = targetNetwork.id === hardhat.id;
-
   const burgerMenuRef = useRef<HTMLDetailsElement>(null);
-  useOutsideClick(burgerMenuRef, () => {
-    burgerMenuRef?.current?.removeAttribute("open");
+  useOutsideClick(burgerMenuRef, () => burgerMenuRef?.current?.removeAttribute("open"));
+
+  const { address } = useAccount();
+
+  const { data: tokenBalanceRaw } = useReadContract({
+    abi: ERC20_READ_ABI,
+    address: HMT_ADDRESS,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address && HMT_ADDRESS) },
   });
+
+  const tokenBalance = useMemo(() => {
+    try {
+      return tokenBalanceRaw ? formatUnits(tokenBalanceRaw as bigint, HMT_DECIMALS) : "0";
+    } catch {
+      return "0";
+    }
+  }, [tokenBalanceRaw]);
 
   return (
     <div className="sticky lg:static top-0 navbar border-t-indigo-500 min-h-0 shrink-0 justify-between z-20 px-0 sm:px-2">
@@ -75,20 +73,8 @@ export const Header = () => {
           <summary className="ml-1 btn btn-ghost lg:hidden hover:bg-transparent">
             <Bars3Icon className="h-1/2" />
           </summary>
-          <ul
-            className="menu menu-compact dropdown-content mt-3 p-2 shadow-sm bg-base-100 rounded-box w-52"
-            onClick={() => {
-              burgerMenuRef?.current?.removeAttribute("open");
-            }}
-          >
-            <HeaderMenuLinks />
-          </ul>
         </details>
-        <Link
-          href="/"
-          passHref
-          className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0"
-        >
+        <Link href="/" passHref className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0">
           <div className="flex flex-col">
             <span className="font-bold leading-tight">NotABot</span>
             <span className="text-xs">Ethereum dev stack</span>
@@ -99,8 +85,13 @@ export const Header = () => {
         </ul>
       </div>
       <div className="navbar-end grow mr-4">
-        {/* <RainbowKitCustomConnectButton />
-        {isLocalNetwork && <FaucetButton />} */}
+        {HMT_ADDRESS ? (
+          <div className="flex items-center mr-3">
+            <div className="badge badge-outline mr-2">{HMT_SYMBOL}</div>
+            <div className="font-mono text-sm">{tokenBalance}</div>
+          </div>
+        ) : null}
+        <RainbowKitCustomConnectButton />
       </div>
     </div>
   );

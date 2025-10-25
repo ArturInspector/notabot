@@ -10,25 +10,28 @@ class SignerService {
     return this.wallet.address;
   }
 
-  /**
-   * Sign Gitcoin verification data
-   * Must match GitcoinAdapter.sol line 41:
-   * keccak256(abi.encodePacked(user, userId, score, timestamp))
-   * 
-   * @param {string} userAddress - User's wallet address
-   * @param {string} userId - Unique ID (bytes32)
-   * @param {number} score - Gitcoin score (uint256)
-   * @param {number} timestamp - Unix timestamp (uint256)
-   * @returns {string} ECDSA signature
-   */
   async signGitcoinProof(userAddress, userId, score, timestamp) {
     const messageHash = ethers.solidityPackedKeccak256(
       ['address', 'bytes32', 'uint256', 'uint256'],
       [userAddress, userId, score, timestamp]
     );
-    const signature = await this.wallet.signMessage(ethers.getBytes(messageHash));
-    
-    return signature;
+    return await this.wallet.signMessage(ethers.getBytes(messageHash));
+  }
+
+  async signPoHProof(userAddress, pohId, timestamp) {
+    const messageHash = ethers.solidityPackedKeccak256(
+      ['address', 'bytes32', 'uint256'],
+      [userAddress, pohId, timestamp]
+    );
+    return await this.wallet.signMessage(ethers.getBytes(messageHash));
+  }
+
+  async signBrightIDProof(userAddress, contextId, timestamp) {
+    const messageHash = ethers.solidityPackedKeccak256(
+      ['address', 'bytes32', 'uint256'],
+      [userAddress, contextId, timestamp]
+    );
+    return await this.wallet.signMessage(ethers.getBytes(messageHash));
   }
 
   /**

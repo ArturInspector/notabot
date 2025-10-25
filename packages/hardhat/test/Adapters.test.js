@@ -18,9 +18,11 @@ describe("GitcoinAdapter", function () {
 
     it("should revert on invalid signature", async function () {
       const [, , , wrongOracle] = await ethers.getSigners();
-      const proof = await mockGitcoinProof(wrongOracle, user.address, 75);
-
-      await expect(gitcoinAdapter.verifyAndRegister(user.address, proof)).to.be.revertedWithCustomError(
+      const proof = await mockGitcoinProof(oracle, user.address, 75);
+      
+      // Try to use proof from different user - signature won't match
+      const wrongUser = wrongOracle.address;
+      await expect(gitcoinAdapter.verifyAndRegister(wrongUser, proof)).to.be.revertedWithCustomError(
         gitcoinAdapter,
         "InvalidSignature",
       );

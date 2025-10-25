@@ -2212,17 +2212,26 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {
-        allowance: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        approve: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        balanceOf: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        decimals: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        allowance:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        approve:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        balanceOf:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        decimals:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
         name: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        symbol: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        totalSupply: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        transfer: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        transferFrom: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        symbol:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        totalSupply:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        transfer:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        transferFrom:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
         burn: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        burnFrom: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        burnFrom:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
         DEFAULT_ADMIN_ROLE: "@openzeppelin/contracts/access/AccessControl.sol",
         getRoleAdmin: "@openzeppelin/contracts/access/AccessControl.sol",
         grantRole: "@openzeppelin/contracts/access/AccessControl.sol",
@@ -2376,6 +2385,182 @@ const deployedContracts = {
     },
   },
   84532: {
+    BrightIDAdapter: {
+      address: "0xAeCEbf9B937D1B36C2ed5D2C2190673eA3CC82de",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_mainAggregator",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_backendOracle",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [],
+          name: "ECDSAInvalidSignature",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "length",
+              type: "uint256",
+            },
+          ],
+          name: "ECDSAInvalidSignatureLength",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "s",
+              type: "bytes32",
+            },
+          ],
+          name: "ECDSAInvalidSignatureS",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "InvalidSignature",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "ProofAlreadyUsed",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "ProofExpired",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "bytes32",
+              name: "contextId",
+              type: "bytes32",
+            },
+          ],
+          name: "BrightIDVerified",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "PROOF_VALIDITY",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "backendOracle",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getSourceId",
+          outputs: [
+            {
+              internalType: "uint8",
+              name: "",
+              type: "uint8",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "mainAggregator",
+          outputs: [
+            {
+              internalType: "contract MainAggregator",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "",
+              type: "bytes32",
+            },
+          ],
+          name: "usedProofs",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              internalType: "bytes",
+              name: "proof",
+              type: "bytes",
+            },
+          ],
+          name: "verifyAndRegister",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {
+        getSourceId: "contracts/interfaces/IVerificationAdapter.sol",
+        verifyAndRegister: "contracts/interfaces/IVerificationAdapter.sol",
+      },
+      deployedOnBlock: 32818429,
+    },
     GitcoinAdapter: {
       address: "0xCd52fb37d7Ff8d164fB49274E7fd8e2b81b5710b",
       abi: [
@@ -3087,6 +3272,187 @@ const deployedContracts = {
       },
       deployedOnBlock: 32816012,
     },
+    PoHAdapter: {
+      address: "0xc2fF5af5C12B7085dC49415Cb81e29B8524E06C0",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_mainAggregator",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_backendOracle",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [],
+          name: "ECDSAInvalidSignature",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "length",
+              type: "uint256",
+            },
+          ],
+          name: "ECDSAInvalidSignatureLength",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "s",
+              type: "bytes32",
+            },
+          ],
+          name: "ECDSAInvalidSignatureS",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "InvalidSignature",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "NotRegisteredInPoH",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "ProofAlreadyUsed",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "ProofExpired",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "bytes32",
+              name: "pohId",
+              type: "bytes32",
+            },
+          ],
+          name: "PoHVerified",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "PROOF_VALIDITY",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "backendOracle",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getSourceId",
+          outputs: [
+            {
+              internalType: "uint8",
+              name: "",
+              type: "uint8",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "mainAggregator",
+          outputs: [
+            {
+              internalType: "contract MainAggregator",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "",
+              type: "bytes32",
+            },
+          ],
+          name: "usedProofs",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              internalType: "bytes",
+              name: "proof",
+              type: "bytes",
+            },
+          ],
+          name: "verifyAndRegister",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {
+        getSourceId: "contracts/interfaces/IVerificationAdapter.sol",
+        verifyAndRegister: "contracts/interfaces/IVerificationAdapter.sol",
+      },
+      deployedOnBlock: 32818420,
+    },
     VerificationToken: {
       address: "0x9f12107874B1ED8B10AED87e19E4BDf5ea17a45B",
       abi: [
@@ -3523,17 +3889,26 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {
-        allowance: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        approve: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        balanceOf: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        decimals: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        allowance:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        approve:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        balanceOf:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        decimals:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
         name: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        symbol: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        totalSupply: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        transfer: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        transferFrom: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        symbol:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        totalSupply:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        transfer:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        transferFrom:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
         burn: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        burnFrom: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        burnFrom:
+          "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
         owner: "@openzeppelin/contracts/access/Ownable.sol",
         renounceOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",

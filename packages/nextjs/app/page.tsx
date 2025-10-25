@@ -7,7 +7,6 @@ import styles from "./page.module.css";
 import { Button, Card, Col, Row, Tag } from "antd";
 import { type Variants, animate, easeOut, motion } from "framer-motion";
 import type { NextPage } from "next";
-import { useAccount } from "wagmi";
 import { Rocket } from "~~/src/assets/images";
 
 type CounterProps = {
@@ -56,9 +55,6 @@ function AnimatedCounter({
 }
 
 const Home: NextPage = () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { address: connectedAddress } = useAccount();
-
   return (
     <main className={styles.main}>
       <section className={styles.hero}>
@@ -93,11 +89,9 @@ const Home: NextPage = () => {
                 Read the Docs →
               </Button>
             </Link>
-            <Link href="#contact" className={styles.ctaSecondary}>
-              <Button size="large" className={styles.btnSecondary}>
-                Join the Mission
-              </Button>
-            </Link>
+            <Button size="large" className={styles.btnSecondary}>
+              Connect Wallet
+            </Button>
           </motion.div>
           <motion.div variants={fadeUp} className={styles.providers}>
             <Tag className={styles.tag}>Worldcoin</Tag>

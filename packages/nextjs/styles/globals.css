@@ -105,7 +105,20 @@ html {
 }
 
 body {
-  font-family: var(--font-ibm, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji");
+  font-family: var(
+    --font-ibm,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Ubuntu,
+    Cantarell,
+    Noto Sans,
+    Helvetica Neue,
+    Arial,
+    "Apple Color Emoji",
+    "Segoe UI Emoji"
+  );
   line-height: 1.55;
 }
 
@@ -151,7 +164,12 @@ video {
 
 @media (min-width: 1280px) {
   .layout-root {
-    background: radial-gradient(1200px 600px at 50% -10%, rgba(123, 97, 255, 0.06), transparent 60%) var(--bg);
+    background: radial-gradient(
+        1200px 600px at 50% -10%,
+        rgba(123, 97, 255, 0.06),
+        transparent 60%
+      )
+      var(--bg);
   }
 }
 

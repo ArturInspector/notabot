@@ -1,7 +1,9 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 
-const deployBrightIDAdapter: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const deployBrightIDAdapter: DeployFunction = async function (
+  hre: HardhatRuntimeEnvironment,
+) {
   const { deployer } = await hre.getNamedAccounts();
   const { deploy, get } = hre.deployments;
 
@@ -18,7 +20,10 @@ const deployBrightIDAdapter: DeployFunction = async function (hre: HardhatRuntim
   const brightidAdapter = await get("BrightIDAdapter");
   const { ethers } = hre;
 
-  const aggregator = await ethers.getContractAt("MainAggregator", mainAggregator.address);
+  const aggregator = await ethers.getContractAt(
+    "MainAggregator",
+    mainAggregator.address,
+  );
 
   const isAlreadyAdapter = await aggregator.isAdapter(brightidAdapter.address);
   if (!isAlreadyAdapter) {
@@ -35,4 +40,3 @@ export default deployBrightIDAdapter;
 
 deployBrightIDAdapter.tags = ["BrightIDAdapter", "adapters"];
 deployBrightIDAdapter.dependencies = ["MainAggregator"];
-

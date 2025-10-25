@@ -1,7 +1,9 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 
-const deployPoHAdapter: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const deployPoHAdapter: DeployFunction = async function (
+  hre: HardhatRuntimeEnvironment,
+) {
   const { deployer } = await hre.getNamedAccounts();
   const { deploy, get } = hre.deployments;
 
@@ -19,7 +21,10 @@ const deployPoHAdapter: DeployFunction = async function (hre: HardhatRuntimeEnvi
   const pohAdapter = await get("PoHAdapter");
   const { ethers } = hre;
 
-  const aggregator = await ethers.getContractAt("MainAggregator", mainAggregator.address);
+  const aggregator = await ethers.getContractAt(
+    "MainAggregator",
+    mainAggregator.address,
+  );
 
   const isAlreadyAdapter = await aggregator.isAdapter(pohAdapter.address);
   if (!isAlreadyAdapter) {
@@ -36,4 +41,3 @@ export default deployPoHAdapter;
 
 deployPoHAdapter.tags = ["PoHAdapter", "adapters"];
 deployPoHAdapter.dependencies = ["MainAggregator"];
-

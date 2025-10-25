@@ -1,5 +1,4 @@
 import { FlatCompat } from "@eslint/eslintrc";
-import prettierPlugin from "eslint-plugin-prettier";
 import { defineConfig } from "eslint/config";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,21 +11,10 @@ const compat = new FlatCompat({
 
 export default defineConfig([
   {
-    plugins: {
-      prettier: prettierPlugin,
-    },
-    extends: compat.extends("next/core-web-vitals", "next/typescript", "prettier"),
-
+    extends: compat.extends("next/core-web-vitals", "next/typescript"),
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/ban-ts-comment": "off",
-
-      "prettier/prettier": [
-        "warn",
-        {
-          endOfLine: "auto",
-        },
-      ],
     },
   },
 ]);

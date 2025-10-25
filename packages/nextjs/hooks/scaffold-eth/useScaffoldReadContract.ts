@@ -1,5 +1,9 @@
 import { useEffect } from "react";
-import { QueryObserverResult, RefetchOptions, useQueryClient } from "@tanstack/react-query";
+import {
+  QueryObserverResult,
+  RefetchOptions,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { ExtractAbiFunctionNames } from "abitype";
 import { ReadContractErrorType } from "viem";
 import { useBlockNumber, useReadContract } from "wagmi";
@@ -24,7 +28,10 @@ import {
  */
 export const useScaffoldReadContract = <
   TContractName extends ContractName,
-  TFunctionName extends ExtractAbiFunctionNames<ContractAbi<TContractName>, "pure" | "view">,
+  TFunctionName extends ExtractAbiFunctionNames<
+    ContractAbi<TContractName>,
+    "pure" | "view"
+  >,
 >({
   contractName,
   functionName,
@@ -50,14 +57,19 @@ export const useScaffoldReadContract = <
     args,
     ...(readContractConfig as any),
     query: {
-      enabled: !Array.isArray(args) || !args.some(arg => arg === undefined),
+      enabled: !Array.isArray(args) || !args.some((arg) => arg === undefined),
       ...queryOptions,
     },
   }) as Omit<ReturnType<typeof useReadContract>, "data" | "refetch"> & {
     data: AbiFunctionReturnType<ContractAbi, TFunctionName> | undefined;
     refetch: (
       options?: RefetchOptions | undefined,
-    ) => Promise<QueryObserverResult<AbiFunctionReturnType<ContractAbi, TFunctionName>, ReadContractErrorType>>;
+    ) => Promise<
+      QueryObserverResult<
+        AbiFunctionReturnType<ContractAbi, TFunctionName>,
+        ReadContractErrorType
+      >
+    >;
   };
 
   const queryClient = useQueryClient();

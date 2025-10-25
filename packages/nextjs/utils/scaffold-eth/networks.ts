@@ -10,7 +10,8 @@ type ChainAttributes = {
 };
 
 export type ChainWithAttributes = chains.Chain & Partial<ChainAttributes>;
-export type AllowedChainIds = (typeof scaffoldConfig.targetNetworks)[number]["id"];
+export type AllowedChainIds =
+  (typeof scaffoldConfig.targetNetworks)[number]["id"];
 
 // Mapping of chainId to RPC chain name an format followed by alchemy and infura
 export const RPC_CHAIN_NAMES: Record<number, string> = {
@@ -98,7 +99,7 @@ export const NETWORKS_EXTRA_DATA: Record<string, ChainAttributes> = {
 export function getBlockExplorerTxLink(chainId: number, txnHash: string) {
   const chainNames = Object.keys(chains);
 
-  const targetChainArr = chainNames.filter(chainName => {
+  const targetChainArr = chainNames.filter((chainName) => {
     const wagmiChain = chains[chainName as keyof typeof chains];
     return wagmiChain.id === chainId;
   });
@@ -121,7 +122,10 @@ export function getBlockExplorerTxLink(chainId: number, txnHash: string) {
  * Gives the block explorer URL for a given address.
  * Defaults to Etherscan if no (wagmi) block explorer is configured for the network.
  */
-export function getBlockExplorerAddressLink(network: chains.Chain, address: string) {
+export function getBlockExplorerAddressLink(
+  network: chains.Chain,
+  address: string,
+) {
   const blockExplorerBaseURL = network.blockExplorers?.default?.url;
   if (network.id === chains.hardhat.id) {
     return `/blockexplorer/address/${address}`;
@@ -138,7 +142,7 @@ export function getBlockExplorerAddressLink(network: chains.Chain, address: stri
  * @returns targetNetworks array containing networks configured in scaffold.config including extra network metadata
  */
 export function getTargetNetworks(): ChainWithAttributes[] {
-  return scaffoldConfig.targetNetworks.map(targetNetwork => ({
+  return scaffoldConfig.targetNetworks.map((targetNetwork) => ({
     ...targetNetwork,
     ...NETWORKS_EXTRA_DATA[targetNetwork.id],
   }));

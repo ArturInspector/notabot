@@ -31,7 +31,7 @@ export const useContractLogs = (address: Address) => {
           fromBlock: prevBlockNumber,
           toBlock: "latest",
         });
-        setLogs(prevLogs => [...prevLogs, ...newLogs]);
+        setLogs((prevLogs) => [...prevLogs, ...newLogs]);
       },
     });
   }, [address, client]);

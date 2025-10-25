@@ -9,8 +9,12 @@ import { UseBalanceParameters, useBalance, useBlockNumber } from "wagmi";
 export const useWatchBalance = (useBalanceParameters: UseBalanceParameters) => {
   const { targetNetwork } = useTargetNetwork();
   const queryClient = useQueryClient();
-  const { data: blockNumber } = useBlockNumber({ watch: true, chainId: targetNetwork.id });
-  const { queryKey, ...restUseBalanceReturn } = useBalance(useBalanceParameters);
+  const { data: blockNumber } = useBlockNumber({
+    watch: true,
+    chainId: targetNetwork.id,
+  });
+  const { queryKey, ...restUseBalanceReturn } =
+    useBalance(useBalanceParameters);
 
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey });

@@ -28,6 +28,7 @@ export const config = {
   GITCOIN_API_KEY: process.env.GITCOIN_API_KEY,
   GITCOIN_SCORER_ID: process.env.GITCOIN_SCORER_ID,
   GITCOIN_MIN_SCORE: parseInt(process.env.GITCOIN_MIN_SCORE || '20', 10),
+  DEMO_MODE: process.env.DEMO_MODE === 'true',
   RATE_LIMIT_WINDOW_MS: 60 * 1000,
   RATE_LIMIT_MAX_REQUESTS: 100,
   REQUEST_TIMEOUT_MS: 30000,

@@ -207,6 +207,74 @@ app.post('/api/brightid/verify', validateAddress, async (req, res) => {
   }
 });
 
+app.post('/api/demo/verify', validateAddress, async (req, res) => {
+  const { userAddress, source = 'gitcoin' } = req.body;
+  
+  logger.info('demo verification request', { userAddress, source });
+
+  if (!config.DEMO_MODE) {
+    return res.status(403).json({
+      error: 'Demo mode disabled',
+      code: 'DEMO_MODE_DISABLED',
+      hint: 'Set DEMO_MODE=true in .env for hackathon testing'
+    });
+  }
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  let proof, signature;
+
+  if (source === 'gitcoin') {
+    const userId = signerService.createUserId('demo-gitcoin', userAddress, 'hackathon');
+    const score = 99;
+    signature = await signerService.signGitcoinProof(userAddress, userId, score, timestamp);
+    
+    proof = {
+      userId,
+      score,
+      timestamp,
+      signature,
+      expiresAt: timestamp + config.PROOF_VALIDITY_SECONDS,
+      backendAddress: signerService.getAddress()
+    };
+  } else if (source === 'poh') {
+    const pohId = signerService.createUserId('demo-poh', userAddress, 'hackathon');
+    signature = await signerService.signPoHProof(userAddress, pohId, timestamp);
+    
+    proof = {
+      pohId,
+      timestamp,
+      signature,
+      expiresAt: timestamp + config.PROOF_VALIDITY_SECONDS,
+      backendAddress: signerService.getAddress()
+    };
+  } else if (source === 'brightid') {
+    const contextId = signerService.createUserId('demo-brightid', userAddress, 'hackathon');
+    signature = await signerService.signBrightIDProof(userAddress, contextId, timestamp);
+    
+    proof = {
+      contextId,
+      timestamp,
+      signature,
+      expiresAt: timestamp + config.PROOF_VALIDITY_SECONDS,
+      backendAddress: signerService.getAddress()
+    };
+  } else {
+    return res.status(400).json({
+      error: 'Invalid source',
+      code: 'INVALID_SOURCE',
+      validSources: ['gitcoin', 'poh', 'brightid']
+    });
+  }
+
+  logger.info('🎪 DEMO verification success', { userAddress, source });
+
+  res.json({
+    success: true,
+    demo: true,
+    data: proof
+  });
+});
+
 app.post('/api/binance/verify', validateAddress, async (req, res) => {
   const { userAddress } = req.body;
   
@@ -230,6 +298,9 @@ app.listen(config.PORT, () => {
   console.log('  POST /api/gitcoin/verify');
   console.log('  POST /api/poh/verify');
   console.log('  POST /api/brightid/verify');
+  if (config.DEMO_MODE) {
+    console.log('  POST /api/demo/verify (DEMO MODE ENABLED)');
+  }
   console.log('  POST /api/binance/verify (stub)');
 });
 

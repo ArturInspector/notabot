@@ -23,9 +23,14 @@ const deployGitcoinAdapter: DeployFunction = async function (hre: HardhatRuntime
 
   const aggregator = await ethers.getContractAt("MainAggregator", mainAggregator.address);
 
-  console.log("Adding GitcoinAdapter to MainAggregator...");
-  await aggregator.addAdapter(gitcoinAdapter.address, 1); // sourceId = 1 for Gitcoin
-  console.log("✅ GitcoinAdapter added!");
+  const isAlreadyAdapter = await aggregator.isAdapter(gitcoinAdapter.address);
+  if (!isAlreadyAdapter) {
+    console.log("Adding GitcoinAdapter to MainAggregator...");
+    await aggregator.addAdapter(gitcoinAdapter.address, 1); // sourceId = 1 for Gitcoin
+    console.log("✅ GitcoinAdapter added!");
+  } else {
+    console.log("✅ GitcoinAdapter already registered");
+  }
   console.log(`📝 Backend Oracle Address: ${backendOracleAddress}`);
 };
 

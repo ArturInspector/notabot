@@ -35,12 +35,15 @@ async function mockGitcoinProof(oracle, userAddress, score = 75) {
   const userId = ethers.keccak256(ethers.toUtf8Bytes(userAddress));
   const timestamp = Math.floor(Date.now() / 1000);
   
+  // Pack message exactly as in contract
   const messageHash = ethers.solidityPackedKeccak256(
     ['address', 'bytes32', 'uint256', 'uint256'],
     [userAddress, userId, score, timestamp]
   );
   
-  const signature = await oracle.signMessage(ethers.getBytes(messageHash));
+  // Convert to bytes array for signMessage (it will add Ethereum prefix automatically)
+  const messageHashBytes = ethers.getBytes(messageHash);
+  const signature = await oracle.signMessage(messageHashBytes);
   
   return ethers.AbiCoder.defaultAbiCoder().encode(
     ['bytes32', 'uint256', 'uint256', 'bytes'],

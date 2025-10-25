@@ -23,9 +23,14 @@ const deployWorldcoinAdapter: DeployFunction = async function (hre: HardhatRunti
 
   const aggregator = await ethers.getContractAt("MainAggregator", mainAggregator.address);
 
-  console.log("Adding WorldcoinAdapter to MainAggregator...");
-  await aggregator.addAdapter(worldcoinAdapter.address, 0); // sourceId = 0 for Worldcoin
-  console.log("✅ WorldcoinAdapter added!");
+  const isAlreadyAdapter = await aggregator.isAdapter(worldcoinAdapter.address);
+  if (!isAlreadyAdapter) {
+    console.log("Adding WorldcoinAdapter to MainAggregator...");
+    await aggregator.addAdapter(worldcoinAdapter.address, 0); // sourceId = 0 for Worldcoin
+    console.log("✅ WorldcoinAdapter added!");
+  } else {
+    console.log("✅ WorldcoinAdapter already registered");
+  }
 };
 
 export default deployWorldcoinAdapter;

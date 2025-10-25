@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
+import {
+  RainbowKitProvider,
+  darkTheme,
+  lightTheme,
+} from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
 import { useTheme } from "next-themes";
@@ -36,7 +40,11 @@ export const queryClient = new QueryClient({
   },
 });
 
-export const ScaffoldEthAppWithProviders = ({ children }: { children: React.ReactNode }) => {
+export const ScaffoldEthAppWithProviders = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const { resolvedTheme } = useTheme();
   const isDarkMode = resolvedTheme === "dark";
   const [mounted, setMounted] = useState(false);
@@ -50,7 +58,9 @@ export const ScaffoldEthAppWithProviders = ({ children }: { children: React.Reac
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           avatar={BlockieAvatar}
-          theme={mounted ? (isDarkMode ? darkTheme() : lightTheme()) : lightTheme()}
+          theme={
+            mounted ? (isDarkMode ? darkTheme() : lightTheme()) : lightTheme()
+          }
         >
           <ProgressBar height="3px" color="#2299dd" />
           <ScaffoldEthApp>{children}</ScaffoldEthApp>

@@ -75,6 +75,83 @@
   If we ever want to remove these styles, we need to add an explicit border
   color utility to any element that depends on these defaults.
 */
+:root {
+  --bg: #0b0c10;
+  --bg-elev: #0f1117;
+  --card: rgba(255, 255, 255, 0.04);
+  --text: #f3f4f6;
+  --muted: #c5c7d3;
+  --border: rgba(255, 255, 255, 0.12);
+  --chip-bg: rgba(255, 255, 255, 0.03);
+  --primary-300: #b6a7ff;
+  --primary-500: #7b61ff;
+  --primary-600: #5f47f6;
+  --heading-ink: #0b0c10;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: var(--font-ibm, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji");
+  line-height: 1.55;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.ant-card {
+  border-radius: 16px !important;
+}
+
+.ant-btn {
+  border-radius: 12px !important;
+  height: 44px !important;
+  padding-inline: 18px !important;
+  font-weight: 600 !important;
+}
+
+.ant-tag {
+  padding: 6px 10px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+}
+
+.container {
+  width: min(1200px, 92%);
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: clamp(28px, 4.5vw, 40px);
+  letter-spacing: -0.01em;
+  margin: 0 0 12px;
+}
+
+@media (min-width: 1280px) {
+  .layout-root {
+    background: radial-gradient(1200px 600px at 50% -10%, rgba(123, 97, 255, 0.06), transparent 60%) var(--bg);
+  }
+}
+
 @layer base {
   *,
   ::after,

@@ -205,7 +205,7 @@ const { writeAsync: verifyWorldcoin } = useScaffoldWriteContract({
 **Frontend:**
 - Next.js 15 + TypeScript
 - Scaffold-ETH 2 (wagmi + viem + RainbowKit)
-- TailwindCSS + DaisyUI
+- TailwindCSS + DaisyUI + Antd design
 
 **Backend (Gitcoin):**
 - Node.js + Express

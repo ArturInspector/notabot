@@ -3,6 +3,8 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { config } from './config/env.js';
 import { gitcoinService } from './services/gitcoin.js';
+import { pohService } from './services/poh.js';
+import { brightidService } from './services/brightid.js';
 import { signerService } from './services/signer.js';
 import { validateAddress, sanitizeError } from './middleware/validators.js';
 import { logger } from './utils/logger.js';
@@ -100,16 +102,109 @@ app.post('/api/gitcoin/verify', validateAddress, async (req, res) => {
   }
 });
 
-app.post('/api/worldcoin/prepare', validateAddress, async (req, res) => {
+
+app.post('/api/poh/verify', validateAddress, async (req, res) => {
   const { userAddress } = req.body;
   
-  logger.info('Worldcoin prepare request', { userAddress });
+  try {
+    logger.info('PoH verification request', { userAddress });
+
+    const { registered, pohId } = await pohService.isRegistered(userAddress);
+    
+    if (!registered) {
+      logger.warn('Not registered in PoH', { userAddress });
+      return res.status(400).json({ 
+        error: 'Not registered in Proof of Humanity',
+        code: 'NOT_REGISTERED_IN_POH'
+      });
+    }
+
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signature = await signerService.signPoHProof(
+      userAddress,
+      pohId,
+      timestamp
+    );
+
+    logger.info('PoH verification success', { 
+      userAddress, 
+      pohId: pohId.slice(0, 10) + '...' 
+    });
+
+    res.json({
+      success: true,
+      data: {
+        pohId,
+        timestamp,
+        signature,
+        expiresAt: timestamp + config.PROOF_VALIDITY_SECONDS,
+        backendAddress: signerService.getAddress()
+      }
+    });
+
+  } catch (error) {
+    logger.error('PoH verification failed', { 
+      userAddress, 
+      error: error.message 
+    });
+
+    const sanitized = sanitizeError(error);
+    const statusCode = error.message.includes('NOT_REGISTERED') ? 404 : 500;
+    
+    res.status(statusCode).json(sanitized);
+  }
+});
+
+app.post('/api/brightid/verify', validateAddress, async (req, res) => {
+  const { userAddress } = req.body;
   
-  res.json({
-    success: true,
-    message: 'Worldcoin verification is fully on-chain',
-    info: 'Use WorldcoinAdapter.verifyAndRegister() directly from frontend'
-  });
+  try {
+    logger.info('BrightID verification request', { userAddress });
+
+    const { unique, contextId } = await brightidService.isVerified(userAddress);
+    
+    if (!unique) {
+      logger.warn('Not verified in BrightID', { userAddress });
+      return res.status(400).json({ 
+        error: 'Not verified in BrightID',
+        code: 'NOT_VERIFIED_IN_BRIGHTID'
+      });
+    }
+
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signature = await signerService.signBrightIDProof(
+      userAddress,
+      contextId,
+      timestamp
+    );
+
+    logger.info('BrightID verification success', { 
+      userAddress, 
+      contextId: contextId.slice(0, 10) + '...' 
+    });
+
+    res.json({
+      success: true,
+      data: {
+        contextId,
+        timestamp,
+        signature,
+        expiresAt: timestamp + config.PROOF_VALIDITY_SECONDS,
+        backendAddress: signerService.getAddress()
+      }
+    });
+
+  } catch (error) {
+    logger.error('BrightID verification failed', { 
+      userAddress, 
+      error: error.message 
+    });
+
+    const sanitized = sanitizeError(error);
+    const statusCode = error.message.includes('NOT_VERIFIED') ? 404 : 500;
+    
+    res.status(statusCode).json(sanitized);
+  }
 });
 
 app.post('/api/binance/verify', validateAddress, async (req, res) => {
@@ -133,7 +228,8 @@ app.listen(config.PORT, () => {
   logger.info('Endpoints:');
   console.log('  GET  /health');
   console.log('  POST /api/gitcoin/verify');
-  console.log('  POST /api/worldcoin/prepare');
+  console.log('  POST /api/poh/verify');
+  console.log('  POST /api/brightid/verify');
   console.log('  POST /api/binance/verify (stub)');
 });
 

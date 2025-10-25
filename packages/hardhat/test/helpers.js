@@ -18,12 +18,24 @@ async function deployAll() {
   const gitcoinAdapter = await GitcoinAdapter.deploy(await aggregator.getAddress(), oracle.address);
   await gitcoinAdapter.waitForDeployment();
   
+  const PoHAdapter = await ethers.getContractFactory("PoHAdapter");
+  const pohAdapter = await PoHAdapter.deploy(await aggregator.getAddress(), oracle.address);
+  await pohAdapter.waitForDeployment();
+  
+  const BrightIDAdapter = await ethers.getContractFactory("BrightIDAdapter");
+  const brightidAdapter = await BrightIDAdapter.deploy(await aggregator.getAddress(), oracle.address);
+  await brightidAdapter.waitForDeployment();
+  
   await aggregator.addAdapter(await gitcoinAdapter.getAddress(), 1);
+  await aggregator.addAdapter(await pohAdapter.getAddress(), 2);
+  await aggregator.addAdapter(await brightidAdapter.getAddress(), 3);
   
   return { 
     aggregator, 
     token, 
     gitcoinAdapter,
+    pohAdapter,
+    brightidAdapter,
     owner, 
     user, 
     user2, 
@@ -51,5 +63,41 @@ async function mockGitcoinProof(oracle, userAddress, score = 75) {
   );
 }
 
-module.exports = { deployAll, mockGitcoinProof };
+async function mockPoHProof(oracle, userAddress) {
+  const pohId = ethers.keccak256(ethers.toUtf8Bytes(`poh-${userAddress}`));
+  const timestamp = Math.floor(Date.now() / 1000);
+  
+  const messageHash = ethers.solidityPackedKeccak256(
+    ['address', 'bytes32', 'uint256'],
+    [userAddress, pohId, timestamp]
+  );
+  
+  const messageHashBytes = ethers.getBytes(messageHash);
+  const signature = await oracle.signMessage(messageHashBytes);
+  
+  return ethers.AbiCoder.defaultAbiCoder().encode(
+    ['bytes32', 'uint256', 'bytes'],
+    [pohId, timestamp, signature]
+  );
+}
+
+async function mockBrightIDProof(oracle, userAddress) {
+  const contextId = ethers.keccak256(ethers.toUtf8Bytes(`brightid-${userAddress}`));
+  const timestamp = Math.floor(Date.now() / 1000);
+  
+  const messageHash = ethers.solidityPackedKeccak256(
+    ['address', 'bytes32', 'uint256'],
+    [userAddress, contextId, timestamp]
+  );
+  
+  const messageHashBytes = ethers.getBytes(messageHash);
+  const signature = await oracle.signMessage(messageHashBytes);
+  
+  return ethers.AbiCoder.defaultAbiCoder().encode(
+    ['bytes32', 'uint256', 'bytes'],
+    [contextId, timestamp, signature]
+  );
+}
+
+module.exports = { deployAll, mockGitcoinProof, mockPoHProof, mockBrightIDProof };
 

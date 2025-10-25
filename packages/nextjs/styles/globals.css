@@ -100,6 +100,9 @@ body {
   background: var(--bg);
   color: var(--text);
 }
+html {
+  scroll-behavior: smooth;
+}
 
 body {
   font-family: var(--font-ibm, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji");

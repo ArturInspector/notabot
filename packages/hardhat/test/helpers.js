@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 
 async function deployAll() {
   const [owner, user, user2, oracle] = await ethers.getSigners();
-  
+
   const Token = await ethers.getContractFactory("VerificationToken");
   const token = await Token.deploy();
   await token.waitForDeployment();
@@ -17,36 +17,34 @@ async function deployAll() {
   const GitcoinAdapter = await ethers.getContractFactory("GitcoinAdapter");
   const gitcoinAdapter = await GitcoinAdapter.deploy(await aggregator.getAddress(), oracle.address);
   await gitcoinAdapter.waitForDeployment();
-  
+
   await aggregator.addAdapter(await gitcoinAdapter.getAddress(), 1);
-  
   return { 
     aggregator, 
     token, 
     gitcoinAdapter,
-    owner, 
-    user, 
-    user2, 
-    oracle 
+    owner,
+    user,
+    user2,
+    oracle,
   };
 }
 
 async function mockGitcoinProof(oracle, userAddress, score = 75) {
   const userId = ethers.keccak256(ethers.toUtf8Bytes(userAddress));
   const timestamp = Math.floor(Date.now() / 1000);
-  
+
   const messageHash = ethers.solidityPackedKeccak256(
-    ['address', 'bytes32', 'uint256', 'uint256'],
-    [userAddress, userId, score, timestamp]
+    ["address", "bytes32", "uint256", "uint256"],
+    [userAddress, userId, score, timestamp],
   );
-  
+
   const signature = await oracle.signMessage(ethers.getBytes(messageHash));
-  
+
   return ethers.AbiCoder.defaultAbiCoder().encode(
-    ['bytes32', 'uint256', 'uint256', 'bytes'],
-    [userId, score, timestamp, signature]
+    ["bytes32", "uint256", "uint256", "bytes"],
+    [userId, score, timestamp, signature],
   );
 }
 
 module.exports = { deployAll, mockGitcoinProof };
-

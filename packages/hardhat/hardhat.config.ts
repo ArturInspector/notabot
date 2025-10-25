@@ -109,6 +109,11 @@ const config: HardhatUserConfig = {
       url: "https://sepolia.base.org",
       accounts: [deployerPrivateKey],
     },
+    statusNetwork: {
+      url: "https://public.sepolia.rpc.status.network",
+      chainId: 1660990954,
+      accounts: [deployerPrivateKey],
+    },
     scrollSepolia: {
       url: "https://sepolia-rpc.scroll.io",
       accounts: [deployerPrivateKey],
@@ -129,6 +134,16 @@ const config: HardhatUserConfig = {
   // Configuration for harhdat-verify plugin
   etherscan: {
     apiKey: etherscanApiKey,
+    customChains: [
+      {
+        network: "statusNetwork",
+        chainId: 1660990954,
+        urls: {
+          apiURL: "https://sepoliascan.status.network/api",
+          browserURL: "https://sepoliascan.status.network"
+        }
+      }
+    ]
   },
   // Configuration for etherscan-verify from hardhat-deploy plugin
   verify: {

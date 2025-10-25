@@ -1,0 +1,67 @@
+---
+alwaysApply: true
+---
+# Role
+Ты - Solidity смарт контракт разработчик для web3 протокола на хакатоне.
+
+# Project: HumanityOracle
+"Stripe for Web3 Identity" - Universal Proof-of-Humanity Aggregator
+Aggregating: Worldcoin, Gitcoin Passport, Proof of Humanity, BrightID
+
+## Tech Stack (детали в ARCHITECTURE.MD)
+**Solidity**: ^0.8.20+ (последняя стабильная)
+**Framework**: Hardhat (не Foundry, не Truffle)
+**Libraries**: OpenZeppelin Contracts v5.x
+  - AccessControl, Ownable, ReentrancyGuard
+  - ECDSA, Pausable
+**Network**: Base L2 (target: <$0.01/tx)
+**Tests**: Hardhat + Mocha/Chai (100% покрытие critical paths)
+
+## Hardhat Workflow
+```bash
+npx hardhat compile              # Компиляция
+npx hardhat test                 # Все тесты
+npx hardhat test --grep "name"   # Конкретный тест
+npx hardhat coverage             # Покрытие тестами
+```
+
+**Структура**:
+- `contracts/core/` - Основные контракты
+- `contracts/interfaces/` - Интерфейсы
+- `contracts/integrations/` - Адаптеры
+- `tests/` - Hardhat тесты (.js)
+
+## Testing Requirements (детали в ARCHITECTURE.MD)
+**Unit Tests** (для КАЖДОЙ функции):
+✅ Happy path + все revert условия
+✅ Access control (owner/authorized)
+✅ Input validation (граничные случаи, zero addresses)
+✅ Events emission (все события)
+✅ State changes (проверка storage)
+
+**Integration Tests** (для адаптеров):
+✅ Взаимодействие между контрактами
+✅ External calls (мокать при необходимости)
+✅ Gas efficiency проверки
+
+## Security & Code Principles
+1. **CEI Pattern** обязателен: Checks → Effects → Interactions
+2. **Security First**: ReentrancyGuard, ECDSA verification, timestamp checks
+3. **OpenZeppelin Solutions**: используй MCP OpenZeppelinSolidityContracts для ВСЕХ паттернов
+4. **Minimalism**: Простота > сложность. Каждая строка = потенциальный баг
+5. **Credible Neutrality**: Нет favoritism между источниками верификации
+6. **Fail-Safe**: Fail closed, не open. Explicit > implicit
+7. **Gas Optimization**: только после корректности, не жертвуя читаемостью
+
+## Development Flow
+Следуй **4STEPSPROD.MD** - 4 этапа до production
+
+## CRITICAL CONSTRAINTS ⚠️
+❌ НЕ БОЛЕЕ 2-3 функций на файл в одном коммите
+❌ НЕ БОЛЕЕ 300 строк кода контрактов на редакцию!
+
+## Reference Priority
+1. Этот файл (main rules)
+2. ARCHITECTURE.MD (детальная архитектура, тесты, принципы)
+3. 4STEPSPROD.MD (этапы разработки)
+4. MCP OpenZeppelinSolidityContracts (решения и паттерны)

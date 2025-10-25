@@ -3,17 +3,12 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract VerificationToken is ERC20, ERC20Burnable, AccessControl {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+contract VerificationToken is ERC20, ERC20Burnable, Ownable {
+    uint256 public constant INITIAL_SUPPLY = 1_000_000 * 1e18; // 1M tokens
     
-    constructor(address minter) ERC20("HumanityToken", "HMT") {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(MINTER_ROLE, minter);
-    }
-    
-    function mint(address to, uint256 amount) external onlyRole(MINTER_ROLE) {
-        _mint(to, amount);
+    constructor() ERC20("HumanityToken", "HMT") Ownable(msg.sender) {
+        _mint(msg.sender, INITIAL_SUPPLY);
     }
 }

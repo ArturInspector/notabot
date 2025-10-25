@@ -1,3 +1,4 @@
+// app/docs/page.tsx
 "use client";
 import React from "react";
 import styles from "./page.module.css";
@@ -98,9 +99,10 @@ export default function Docs() {
                       <Paragraph className={styles.lead}>
                         Like OpenZeppelin, but for sybil resistance. Copy HumanityProtected mixin from GitHub, 
                         add onlyHuman modifier, protect your contracts from bots. 
-                        Aggregates Worldcoin, Gitcoin Passport, BrightID on Base L2.
+                        Aggregates Worldcoin, Gitcoin Passport, BrightID on multiple chains.
                       </Paragraph>
                       <Space wrap>
+                        <Tag className={styles.tagPrimary}>Status Network</Tag>
                         <Tag className={styles.tagPrimary}>Base Sepolia</Tag>
                         <Tag className={styles.tagSoft}>Abstract Mixin</Tag>
                         <Tag className={styles.tagMono}>git clone</Tag>
@@ -174,7 +176,7 @@ contract MyGame is HumanityProtected {
                   <pre className={styles.codeLg}>
                     <code>{`import "./HumanityProtected.sol";
 
-// MainAggregator on Base Sepolia
+// MainAggregator on Status Network
 address constant ORACLE = 0x8Cec9277d761f947e29EBeACc4035DDCDB10c2BD;
 
 contract YourContract is HumanityProtected {
@@ -189,7 +191,7 @@ contract YourContract is HumanityProtected {
     function premiumFeature() external minTrustScore(2) {
         // requires 2+ sources
     }
-}`}</code>
+}`}</code>                                                                                                                                                                              
                   </pre>
                 </Card>
               </motion.div>
@@ -344,13 +346,13 @@ contract YourContract is HumanityProtected {
                     <Col xs={24}>
                       <Paragraph className={styles.dim}>
                         <Text className={styles.di1} strong>
-                          Network:
+                          Networks:
                         </Text>{" "}
-                        Base Sepolia Testnet (Chain ID: 84532)
+                        Status Network Sepolia (1660990954) • Base Sepolia (84532)
                       </Paragraph>
                       <Paragraph className={styles.dim}>
                         <Text className={styles.di1} strong>
-                          MainAggregator:
+                          MainAggregator (same on both):
                         </Text>{" "}
                         <Text className={styles.di1} code>
                           0x8Cec9277d761f947e29EBeACc4035DDCDB10c2BD

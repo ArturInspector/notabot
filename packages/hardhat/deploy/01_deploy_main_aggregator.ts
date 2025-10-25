@@ -21,10 +21,16 @@ const deployMainAggregator: DeployFunction = async function (hre: HardhatRuntime
   const tokenContract = await ethers.getContractAt("VerificationToken", verificationToken.address);
 
   // Transfer 500k tokens to MainAggregator for rewards (50% of supply)
+  const aggregatorBalance = await tokenContract.balanceOf(mainAggregator.address);
   const transferAmount = parseEther("500000");
-  console.log("Transferring 500k HMT to MainAggregator for rewards...");
-  await tokenContract.transfer(mainAggregator.address, transferAmount);
-  console.log("✅ MainAggregator funded with tokens!");
+
+  if (aggregatorBalance < transferAmount) {
+    console.log("Transferring 500k HMT to MainAggregator for rewards...");
+    await tokenContract.transfer(mainAggregator.address, transferAmount);
+    console.log("✅ MainAggregator funded with tokens!");
+  } else {
+    console.log("✅ MainAggregator already has sufficient tokens");
+  }
 };
 
 export default deployMainAggregator;

@@ -2,11 +2,10 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { deployAll, mockGitcoinProof } = require("./helpers");
 
-
-describe("MainAggregator", function() {
+describe("MainAggregator", function () {
   let aggregator, token, gitcoinAdapter, owner, user, user2, oracle;
-  
-  beforeEach(async function() {
+
+  beforeEach(async function () {
     ({ aggregator, token, gitcoinAdapter, owner, user, user2, oracle } = await deployAll());
   });
 
@@ -16,15 +15,14 @@ describe("MainAggregator", function() {
       expect(await token.getAddress()).to.be.properAddress;
     });
 
-    
-    it("should transfer tokens to aggregator", async function() {
+    it("should transfer tokens to aggregator", async function () {
       const aggregatorBalance = await token.balanceOf(await aggregator.getAddress());
       expect(aggregatorBalance).to.equal(ethers.parseEther("500000"));
     });
   });
-  
-  describe("registerVerification", function() {
-    it("should transfer tokens on verification", async function() {
+
+  describe("registerVerification", function () {
+    it("should transfer tokens on verification", async function () {
       const proof = await mockGitcoinProof(oracle, user.address);
 
       await gitcoinAdapter.verifyAndRegister(user.address, proof);
@@ -49,9 +47,10 @@ describe("MainAggregator", function() {
 
       await gitcoinAdapter.verifyAndRegister(user.address, proof);
 
+      // Same userId (proof) cannot be used again - GitcoinAdapter checks this
       await expect(gitcoinAdapter.verifyAndRegister(user2.address, proof)).to.be.revertedWithCustomError(
-        aggregator,
-        "DuplicateVerification",
+        gitcoinAdapter,
+        "ProofAlreadyUsed",
       );
     });
   });

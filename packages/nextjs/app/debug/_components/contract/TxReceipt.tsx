@@ -1,12 +1,17 @@
 import { TransactionReceipt } from "viem";
-import { CheckCircleIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
+import {
+  CheckCircleIcon,
+  DocumentDuplicateIcon,
+} from "@heroicons/react/24/outline";
 import { ObjectFieldDisplay } from "~~/app/debug/_components/contract";
 import { useCopyToClipboard } from "~~/hooks/scaffold-eth/useCopyToClipboard";
 import { replacer } from "~~/utils/scaffold-eth/common";
 
 export const TxReceipt = ({ txResult }: { txResult: TransactionReceipt }) => {
-  const { copyToClipboard: copyTxResultToClipboard, isCopiedToClipboard: isTxResultCopiedToClipboard } =
-    useCopyToClipboard();
+  const {
+    copyToClipboard: copyTxResultToClipboard,
+    isCopiedToClipboard: isTxResultCopiedToClipboard,
+  } = useCopyToClipboard();
 
   return (
     <div className="flex text-sm rounded-3xl peer-checked:rounded-b-none min-h-0 bg-secondary py-0">
@@ -20,7 +25,9 @@ export const TxReceipt = ({ txResult }: { txResult: TransactionReceipt }) => {
           <DocumentDuplicateIcon
             className="ml-1.5 text-xl font-normal h-5 w-5 cursor-pointer"
             aria-hidden="true"
-            onClick={() => copyTxResultToClipboard(JSON.stringify(txResult, replacer, 2))}
+            onClick={() =>
+              copyTxResultToClipboard(JSON.stringify(txResult, replacer, 2))
+            }
           />
         )}
       </div>
@@ -32,7 +39,13 @@ export const TxReceipt = ({ txResult }: { txResult: TransactionReceipt }) => {
         <div className="collapse-content overflow-auto bg-secondary rounded-t-none rounded-3xl pl-0!">
           <pre className="text-xs">
             {Object.entries(txResult).map(([k, v]) => (
-              <ObjectFieldDisplay name={k} value={v} size="xs" leftPad={false} key={k} />
+              <ObjectFieldDisplay
+                name={k}
+                value={v}
+                size="xs"
+                leftPad={false}
+                key={k}
+              />
             ))}
           </pre>
         </div>

@@ -4,31 +4,24 @@ async function deployAll() {
   const [owner, user, user2, oracle] = await ethers.getSigners();
 
   const Token = await ethers.getContractFactory("VerificationToken");
-  const token = await Token.deploy(owner.address);
+  const token = await Token.deploy();
   await token.waitForDeployment();
-
-  const SBT = await ethers.getContractFactory("VerificationSBT");
-  const sbt = await SBT.deploy(owner.address);
-  await sbt.waitForDeployment();
-
+  
   const Aggregator = await ethers.getContractFactory("MainAggregator");
-  const aggregator = await Aggregator.deploy(await token.getAddress(), await sbt.getAddress(), owner.address);
+  const aggregator = await Aggregator.deploy(await token.getAddress());
   await aggregator.waitForDeployment();
-
-  const MINTER_ROLE = await token.MINTER_ROLE();
-  await token.grantRole(MINTER_ROLE, await aggregator.getAddress());
-  await sbt.grantRole(MINTER_ROLE, await aggregator.getAddress());
-
+  
+  // Transfer 500k tokens to aggregator for rewards
+  await token.transfer(await aggregator.getAddress(), ethers.parseEther("500000"));
+  
   const GitcoinAdapter = await ethers.getContractFactory("GitcoinAdapter");
   const gitcoinAdapter = await GitcoinAdapter.deploy(await aggregator.getAddress(), oracle.address);
   await gitcoinAdapter.waitForDeployment();
 
   await aggregator.addAdapter(await gitcoinAdapter.getAddress(), 1);
-
-  return {
-    aggregator,
-    token,
-    sbt,
+  return { 
+    aggregator, 
+    token, 
     gitcoinAdapter,
     owner,
     user,

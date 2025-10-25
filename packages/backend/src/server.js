@@ -1,151 +1,140 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import { ethers } from 'ethers';
-import axios from 'axios';
-
-dotenv.config();
+import rateLimit from 'express-rate-limit';
+import { config } from './config/env.js';
+import { gitcoinService } from './services/gitcoin.js';
+import { signerService } from './services/signer.js';
+import { validateAddress, sanitizeError } from './middleware/validators.js';
+import { logger } from './utils/logger.js';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: config.ALLOWED_ORIGINS,
+  credentials: true
+}));
 
-// Backend wallet (для подписи данных)
-const BACKEND_PRIVATE_KEY = process.env.BACKEND_PRIVATE_KEY;
-const GITCOIN_API_KEY = process.env.GITCOIN_API_KEY;
-const GITCOIN_SCORER_ID = process.env.GITCOIN_SCORER_ID;
+app.use(express.json({ limit: config.MAX_PAYLOAD_SIZE }));
 
-if (!BACKEND_PRIVATE_KEY) {
-  throw new Error('BACKEND_PRIVATE_KEY not set in .env');
-}
+const limiter = rateLimit({
+  windowMs: config.RATE_LIMIT_WINDOW_MS,
+  max: config.RATE_LIMIT_MAX_REQUESTS,
+  message: { error: 'Too many requests', code: 'RATE_LIMIT_EXCEEDED' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', limiter);
 
-const backendWallet = new ethers.Wallet(BACKEND_PRIVATE_KEY);
-console.log('Backend Oracle Address:', backendWallet.address);
+logger.info('NotABot Backend starting', {
+  oracleAddress: signerService.getAddress(),
+  environment: config.NODE_ENV,
+  port: config.PORT
+});
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok',
     service: 'NotABot Backend',
-    oracleAddress: backendWallet.address
+    version: '1.0.0',
+    oracleAddress: signerService.getAddress(),
+    timestamp: Math.floor(Date.now() / 1000)
   });
 });
 
-/**
- * POST /api/gitcoin/verify
- * Получает Gitcoin Passport score и подписывает данные для on-chain верификации
- * Body: { userAddress: "0x..." }
- * Returns: { userId, score, timestamp, signature }
- */
-app.post('/api/gitcoin/verify', async (req, res) => {
+app.post('/api/gitcoin/verify', validateAddress, async (req, res) => {
+  const { userAddress } = req.body;
+  
   try {
-    const { userAddress } = req.body;
+    logger.info('Gitcoin verification request', { userAddress });
 
-    if (!userAddress || !ethers.isAddress(userAddress)) {
-      return res.status(400).json({ error: 'Invalid address' });
-    }
-
-    // 1. Получаем score из Gitcoin Passport API
-    const gitcoinResponse = await axios.get(
-      `https://api.scorer.gitcoin.co/registry/score/${GITCOIN_SCORER_ID}/${userAddress}`,
-      {
-        headers: {
-          'X-API-KEY': GITCOIN_API_KEY,
-          'Accept': 'application/json'
-        }
-      }
-    );
-
-    const { score, evidence } = gitcoinResponse.data;
+    const { score, rawScore } = await gitcoinService.getPassportScore(userAddress);
     
-    if (!score || parseFloat(score) < 20) {
+    if (!gitcoinService.isScoreValid(score)) {
+      logger.warn('Score too low', { userAddress, score, minRequired: config.GITCOIN_MIN_SCORE });
       return res.status(400).json({ 
-        error: 'Score too low',
-        score: parseFloat(score),
-        minRequired: 20
+        error: 'Score below minimum threshold',
+        code: 'SCORE_TOO_LOW',
+        score,
+        minRequired: config.GITCOIN_MIN_SCORE
       });
     }
 
-    // 2. Создаём уникальный userId (hash от address для privacy)
-    const userId = ethers.keccak256(
-      ethers.toUtf8Bytes(`gitcoin:${userAddress}:${evidence?.rawScore || score}`)
-    );
-
-    // 3. Текущий timestamp (для proof validity)
+    const userId = signerService.createUserId('gitcoin', userAddress, rawScore);
     const timestamp = Math.floor(Date.now() / 1000);
-
-    // 4. Создаём message для подписи (такой же как в GitcoinAdapter.sol line 41)
-    const message = ethers.solidityPackedKeccak256(
-      ['address', 'bytes32', 'uint256', 'uint256'],
-      [userAddress, userId, Math.floor(parseFloat(score)), timestamp]
+    const scoreInt = Math.floor(score);
+    const signature = await signerService.signGitcoinProof(
+      userAddress,
+      userId,
+      scoreInt,
+      timestamp
     );
 
-    // 5. Подписываем через backend wallet
-    const signature = await backendWallet.signMessage(ethers.getBytes(message));
+    logger.info('Gitcoin verification success', { 
+      userAddress, 
+      score: scoreInt,
+      userId: userId.slice(0, 10) + '...' 
+    });
 
-    // 6. Возвращаем данные для фронтенда
     res.json({
       success: true,
       data: {
         userId,
-        score: Math.floor(parseFloat(score)),
+        score: scoreInt,
         timestamp,
         signature,
-        // Для debug:
-        backendAddress: backendWallet.address,
-        expiresAt: timestamp + 3600 // 1 hour validity
+        expiresAt: timestamp + config.PROOF_VALIDITY_SECONDS,
+        backendAddress: signerService.getAddress()
       }
     });
 
   } catch (error) {
-    console.error('Gitcoin verification error:', error.response?.data || error.message);
-    
-    if (error.response?.status === 404) {
-      return res.status(404).json({ 
-        error: 'No Gitcoin Passport found for this address',
-        hint: 'User needs to create passport at passport.gitcoin.co'
-      });
-    }
-
-    res.status(500).json({ 
-      error: 'Failed to verify Gitcoin Passport',
-      details: error.message 
+    logger.error('Gitcoin verification failed', { 
+      userAddress, 
+      error: error.message 
     });
+
+    const sanitized = sanitizeError(error);
+    const statusCode = error.message.includes('NO_PASSPORT_FOUND') ? 404 : 500;
+    
+    res.status(statusCode).json(sanitized);
   }
 });
 
-/**
- * POST /api/worldcoin/prepare
- * 
- * (OPTIONAL) Для будущего: если нужна pre-verification
- * Worldcoin работает on-chain, но можем добавить rate limiting здесь
- */
-app.post('/api/worldcoin/prepare', async (req, res) => {
-  try {
-    const { userAddress } = req.body;
-
-    // TODO: можем добавить rate limiting, analytics, etc.
-    
-    res.json({
-      success: true,
-      message: 'Worldcoin verification is fully on-chain, no backend needed'
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+app.post('/api/worldcoin/prepare', validateAddress, async (req, res) => {
+  const { userAddress } = req.body;
+  
+  logger.info('Worldcoin prepare request', { userAddress });
+  
+  res.json({
+    success: true,
+    message: 'Worldcoin verification is fully on-chain',
+    info: 'Use WorldcoinAdapter.verifyAndRegister() directly from frontend'
+  });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 NotABot Backend running on port ${PORT}`);
-  console.log(`📡 Oracle Address: ${backendWallet.address}`);
-  console.log(`\nEndpoints:`);
-  console.log(`  GET  /health`);
-  console.log(`  POST /api/gitcoin/verify`);
+app.post('/api/binance/verify', validateAddress, async (req, res) => {
+  const { userAddress } = req.body;
+  
+  logger.info('Binance verify request (stub)', { userAddress });
+  
+  res.status(503).json({
+    success: false,
+    error: 'Coming Soon',
+    code: 'NOT_IMPLEMENTED',
+    message: 'Binance KYC integration is under development',
+    estimatedRelease: 'Q2 2025',
+    hint: 'Use Gitcoin or Worldcoin verification for now'
+  });
+});
+
+app.listen(config.PORT, () => {
+  logger.info(`Server running on port ${config.PORT}`);
+  logger.info(`Oracle Address: ${signerService.getAddress()}`);
+  logger.info('Endpoints:');
+  console.log('  GET  /health');
+  console.log('  POST /api/gitcoin/verify');
+  console.log('  POST /api/worldcoin/prepare');
+  console.log('  POST /api/binance/verify (stub)');
 });
 
 export default app;
-

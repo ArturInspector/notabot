@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { ethers } from 'ethers';
 import axios from 'axios';
+import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
@@ -10,8 +11,21 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+  credentials: true
+}));
+app.use(express.json({ limit: '10kb' })); // Prevent huge payloads
+
+// ⚠️ SECURITY: Rate limiting (SAFE.MD line 59: 100 req/min per IP)
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', limiter);
 
 // Backend wallet (для подписи данных)
 const BACKEND_PRIVATE_KEY = process.env.BACKEND_PRIVATE_KEY;

@@ -86,8 +86,12 @@ const Home: NextPage = () => {
   const { switchChainAsync } = useSwitchChain();
   const { openConnectModal } = useConnectModal();
   const [loadingWorld, setLoadingWorld] = React.useState(false);
-  const [loadingAgg, setLoadingAgg] = React.useState(false);
-  const [aggVerified, setAggVerified] = React.useState(false);
+  const [loadingGitcoin, setLoadingGitcoin] = React.useState(false);
+  const [loadingPoh, setLoadingPoh] = React.useState(false);
+  const [loadingBrightid, setLoadingBrightid] = React.useState(false);
+  const [gitcoinVerified, setGitcoinVerified] = React.useState(false);
+  const [pohVerified, setPohVerified] = React.useState(false);
+  const [brightidVerified, setBrightidVerified] = React.useState(false);
   const worldcoinOpenRef = React.useRef<(() => void) | null>(null);
 
   React.useEffect(() => {
@@ -95,13 +99,11 @@ const Home: NextPage = () => {
   }, []);
 
   React.useEffect(() => {
-    const v = typeof window !== "undefined" ? window.localStorage.getItem("agg_verified") : null;
-    setAggVerified(v === "true");
-  }, []);
-
-  const markAggVerified = React.useCallback(() => {
-    if (typeof window !== "undefined") window.localStorage.setItem("agg_verified", "true");
-    setAggVerified(true);
+    if (typeof window !== "undefined") {
+      setGitcoinVerified(window.localStorage.getItem("gitcoin_verified") === "true");
+      setPohVerified(window.localStorage.getItem("poh_verified") === "true");
+      setBrightidVerified(window.localStorage.getItem("brightid_verified") === "true");
+    }
   }, []);
 
   const ensureReady = React.useCallback(async () => {
@@ -121,7 +123,8 @@ const Home: NextPage = () => {
 
   const verifySource = async (source: "gitcoin" | "poh" | "brightid") => {
     const addr = await ensureReady();
-    const res = await postJson<DemoResponse>("/api/demo/verify", { userAddress: addr, source });
+    // Always use demo endpoint for testing
+    const res = await postJson<DemoResponse>(`${BACKEND_URL}/api/demo/verify`, { userAddress: addr, source });
     if (!res.success) throw new Error("verification_failed");
     return res.data;
   };
@@ -142,72 +145,128 @@ const Home: NextPage = () => {
     return hash;
   };
 
-  const submitAggregatorsOnChain = async (
-    user: `0x${string}`, 
-    gitcoin: DemoData, 
-    poh: DemoData, 
-    brightid: DemoData,
-    onProgress?: (step: string) => void
-  ) => {
-    const gitcoinProof = encodeGitcoinProof({
-      userId: (gitcoin.userId || "0x0000000000000000000000000000000000000000000000000000000000000000") as `0x${string}`,
-      score: gitcoin.score ?? 0,
-      timestamp: gitcoin.timestamp,
-      signature: gitcoin.signature,
-    });
-    const pohProof = encodePohProof({
-      pohId: ((poh.pohId || poh.userId) || "0x0000000000000000000000000000000000000000000000000000000000000000") as `0x${string}`,
-      timestamp: poh.timestamp,
-      signature: poh.signature,
-    });
-    const brightIdProof = encodeBrightIdProof({
-      contextId: ((brightid.contextId || brightid.userId) || "0x0000000000000000000000000000000000000000000000000000000000000000") as `0x${string}`,
-      timestamp: brightid.timestamp,
-      signature: brightid.signature,
-    });
-    
-    // CRITICAL: Wait for each tx confirmation before sending next to avoid nonce collision
-    const publicClient = getPublicClient(wagmiConfig);
-    
-    onProgress?.("Sending Gitcoin verification (1/3)…");
-    const tx1 = await writeContract(wagmiConfig, {
-      abi: VERIFY_AND_REGISTER_ABI,
-      address: GITCOIN_ADAPTER_ADDRESS,
-      functionName: "verifyAndRegister",
-      args: [user, gitcoinProof],
-      chainId: TARGET_CHAIN_ID,
-    });
-    
-    // Wait for tx1 to be confirmed before sending tx2
-    onProgress?.("Waiting for Gitcoin confirmation…");
-    await publicClient.waitForTransactionReceipt({ hash: tx1 });
-    
-    onProgress?.("Sending PoH verification (2/3)…");
-    const tx2 = await writeContract(wagmiConfig, {
-      abi: VERIFY_AND_REGISTER_ABI,
-      address: POH_ADAPTER_ADDRESS,
-      functionName: "verifyAndRegister",
-      args: [user, pohProof],
-      chainId: TARGET_CHAIN_ID,
-    });
-    
-    // Wait for tx2 to be confirmed before sending tx3
-    onProgress?.("Waiting for PoH confirmation…");
-    await publicClient.waitForTransactionReceipt({ hash: tx2 });
-    
-    onProgress?.("Sending BrightID verification (3/3)…");
-    const tx3 = await writeContract(wagmiConfig, {
-      abi: VERIFY_AND_REGISTER_ABI,
-      address: BRIGHTID_ADAPTER_ADDRESS,
-      functionName: "verifyAndRegister",
-      args: [user, brightIdProof],
-      chainId: TARGET_CHAIN_ID,
-    });
-    
-    onProgress?.("Waiting for BrightID confirmation…");
-    await publicClient.waitForTransactionReceipt({ hash: tx3 });
-    
-    return [tx1, tx2, tx3] as const;
+  const handleVerifyGitcoin = async () => {
+    if (gitcoinVerified) return;
+    setLoadingGitcoin(true);
+    const t = toast.loading("Fetching Gitcoin proof…");
+    try {
+      const user = await ensureReady();
+      const data = await verifySource("gitcoin");
+      
+      toast.dismiss(t);
+      toast.loading("Submitting transaction…");
+      
+      const proof = encodeGitcoinProof({
+        userId: (data.userId || "0x0000000000000000000000000000000000000000000000000000000000000000") as `0x${string}`,
+        score: data.score ?? 0,
+        timestamp: data.timestamp,
+        signature: data.signature,
+      });
+      
+      const hash = await writeContract(wagmiConfig, {
+        abi: VERIFY_AND_REGISTER_ABI,
+        address: GITCOIN_ADAPTER_ADDRESS,
+        functionName: "verifyAndRegister",
+        args: [user, proof],
+        chainId: TARGET_CHAIN_ID,
+      });
+      
+      if (typeof window !== "undefined") window.localStorage.setItem("gitcoin_verified", "true");
+      setGitcoinVerified(true);
+      
+      toast.dismiss(t);
+      toast.success("✅ Gitcoin verified!");
+      toast.success(`Tx: ${hash.slice(0, 10)}…`, { icon: "🔗" });
+      if (EXPLORER_TX) window.open(`${EXPLORER_TX}${hash}`, "_blank");
+    } catch (e: any) {
+      toast.dismiss(t);
+      const msg = e?.shortMessage || e?.message || "Gitcoin verification failed";
+      toast.error(msg);
+    } finally {
+      setLoadingGitcoin(false);
+    }
+  };
+
+  const handleVerifyPoh = async () => {
+    if (pohVerified) return;
+    setLoadingPoh(true);
+    const t = toast.loading("Fetching PoH proof…");
+    try {
+      const user = await ensureReady();
+      const data = await verifySource("poh");
+      
+      toast.dismiss(t);
+      toast.loading("Submitting transaction…");
+      
+      const proof = encodePohProof({
+        pohId: ((data.pohId || data.userId) || "0x0000000000000000000000000000000000000000000000000000000000000000") as `0x${string}`,
+        timestamp: data.timestamp,
+        signature: data.signature,
+      });
+      
+      const hash = await writeContract(wagmiConfig, {
+        abi: VERIFY_AND_REGISTER_ABI,
+        address: POH_ADAPTER_ADDRESS,
+        functionName: "verifyAndRegister",
+        args: [user, proof],
+        chainId: TARGET_CHAIN_ID,
+      });
+      
+      if (typeof window !== "undefined") window.localStorage.setItem("poh_verified", "true");
+      setPohVerified(true);
+      
+      toast.dismiss(t);
+      toast.success("✅PoH verified!");
+      toast.success(`Tx: ${hash.slice(0, 10)}…`, { icon: "🔗" });
+      if (EXPLORER_TX) window.open(`${EXPLORER_TX}${hash}`, "_blank");
+    } catch (e: any) {
+      toast.dismiss(t);
+      const msg = e?.shortMessage || e?.message || "PoH verification failed";
+      toast.error(msg);
+    } finally {
+      setLoadingPoh(false);
+    }
+  };
+
+  const handleVerifyBrightid = async () => {
+    if (brightidVerified) return;
+    setLoadingBrightid(true);
+    const t = toast.loading("Fetching BrightID proof…");
+    try {
+      const user = await ensureReady();
+      const data = await verifySource("brightid");
+      
+      toast.dismiss(t);
+      toast.loading("Submitting transaction…");
+      
+      const proof = encodeBrightIdProof({
+        contextId: ((data.contextId || data.userId) || "0x0000000000000000000000000000000000000000000000000000000000000000") as `0x${string}`,
+        timestamp: data.timestamp,
+        signature: data.signature,
+      });
+      
+      const hash = await writeContract(wagmiConfig, {
+        abi: VERIFY_AND_REGISTER_ABI,
+        address: BRIGHTID_ADAPTER_ADDRESS,
+        functionName: "verifyAndRegister",
+        args: [user, proof],
+        chainId: TARGET_CHAIN_ID,
+      });
+      
+      if (typeof window !== "undefined") window.localStorage.setItem("brightid_verified", "true");
+      setBrightidVerified(true);
+      
+      toast.dismiss(t);
+      toast.success("✅ BrightID verified!");
+      toast.success(`Tx: ${hash.slice(0, 10)}…`, { icon: "🔗" });
+      if (EXPLORER_TX) window.open(`${EXPLORER_TX}${hash}`, "_blank");
+    } catch (e: any) {
+      toast.dismiss(t);
+      const msg = e?.shortMessage || e?.message || "BrightID verification failed";
+      toast.error(msg);
+    } finally {
+      setLoadingBrightid(false);
+    }
   };
 
   const handleWorldcoinClick = React.useCallback(() => {
@@ -232,35 +291,6 @@ const Home: NextPage = () => {
     }
   };
 
-  const handleVerifyAggregators = async () => {
-    if (aggVerified) return;
-    setLoadingAgg(true);
-    let t = toast.loading("Fetching verification proofs…");
-    try {
-      const user = await ensureReady();
-      const [gitcoin, poh, brightid] = await Promise.all([verifySource("gitcoin"), verifySource("poh"), verifySource("brightid")]);
-      
-      toast.dismiss(t);
-      const hashes = await submitAggregatorsOnChain(user, gitcoin, poh, brightid, (step) => {
-        toast.dismiss(t);
-        t = toast.loading(step);
-      });
-      
-      markAggVerified();
-      toast.dismiss(t);
-      toast.success("✅ All verifications complete! Tokens minted.");
-      hashes.forEach(h => {
-        toast.success(`Tx: ${h.slice(0, 10)}…`, { icon: "🔗" });
-        if (EXPLORER_TX) window.open(`${EXPLORER_TX}${h}`, "_blank");
-      });
-    } catch (e: any) {
-      const msg = e?.shortMessage || e?.message || "Verification failed";
-      toast.error(msg);
-    } finally {
-      toast.dismiss(t);
-      setLoadingAgg(false);
-    }
-  };
 
   return (
     <main className={styles.main}>
@@ -292,13 +322,25 @@ const Home: NextPage = () => {
 
       <section className={styles.section} id="verify">
         <div className={styles.container}>
-          <h2 className={styles.h2Center}>Verify</h2>
-          <Row gutter={[16, 16]} justify="center">
-            <Col xs={24} sm={18} md={10}>
+          <h2 className={styles.h2Center}>Verification Sources</h2>
+          <p className={styles.leadCenter}>Select one or more providers to verify your humanity. Each verification awards 1 trust score token.</p>
+          <Row gutter={[20, 20]} justify="center" style={{ marginTop: '32px' }}>
+            <Col xs={24} sm={12} md={12} lg={6}>
               <Card className={styles.valueCard}>
-                <h3 className={styles.h3}>🌍 World ID</h3>
-                <p className={styles.text} style={{ fontSize: '13px', marginBottom: '14px', opacity: 0.8 }}>
-                  Biometric verification via iris scan
+                <div className={styles.verificationHeader}>
+                  <div className={`${styles.verificationLogo} ${styles.logoWorldcoin}`}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                      <circle cx="12" cy="12" r="4" fill="currentColor"/>
+                    </svg>
+                  </div>
+                  <div className={styles.verificationInfo}>
+                    <div className={styles.verificationLabel}>ZK-PROOF</div>
+                    <h3 className={styles.verificationTitle}>Worldcoin</h3>
+                  </div>
+                </div>
+                <p className={styles.verificationDesc}>
+                  Biometric iris scan with zero-knowledge proof
                 </p>
                 <IDKitWidget app_id={WORLDCOIN_APP_ID} action={WORLDCOIN_ACTION} onSuccess={onWorldcoinSuccess}>
                   {({ open }) => {
@@ -319,22 +361,125 @@ const Home: NextPage = () => {
                 </IDKitWidget>
               </Card>
             </Col>
-            <Col xs={24} sm={18} md={10}>
+            <Col xs={24} sm={12} md={12} lg={6}>
               <Card className={styles.valueCard}>
-                <h3 className={styles.h3}>🎯 Multi-Source Verification</h3>
-                <p className={styles.text} style={{ fontSize: '13px', marginBottom: '14px', opacity: 0.8 }}>
-                  Gitcoin Passport • PoH • BrightID
+                <div className={styles.verificationHeader}>
+                  <div className={`${styles.verificationLogo} ${styles.logoGitcoin}`}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor"/>
+                      <path d="M2 17L12 22L22 17L12 12L2 17Z" fill="currentColor" opacity="0.6"/>
+                    </svg>
+                  </div>
+                  <div className={styles.verificationInfo}>
+                    <div className={styles.verificationLabel}>PASSPORT</div>
+                    <h3 className={styles.verificationTitle}>Gitcoin</h3>
+                  </div>
+                </div>
+                <p className={styles.verificationDesc}>
+                  Reputation score based on verified credentials
                 </p>
                 <Button
                   block
                   size="large"
                   type="primary"
-                  loading={loadingAgg}
-                  disabled={aggVerified}
-                  onClick={handleVerifyAggregators}
-                  className={`${styles.btnVerify} ${styles.btnAggregator}`}
+                  loading={loadingGitcoin}
+                  disabled={gitcoinVerified}
+                  onClick={handleVerifyGitcoin}
+                  className={`${styles.btnVerify} ${styles.btnVerifySource}`}
                 >
-                  {aggVerified ? 'Verified Successfully' : loadingAgg ? 'Verifying...' : 'Verify All Sources'}
+                  {gitcoinVerified ? 'Verified ✓' : loadingGitcoin ? 'Processing...' : 'Verify'}
+                </Button>
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={12} lg={6}>
+              <Card className={styles.valueCard}>
+                <div className={styles.verificationHeader}>
+                  <div className={`${styles.verificationLogo} ${styles.logoPoh}`}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2C10.9 2 10 2.9 10 4C10 5.1 10.9 6 12 6C13.1 6 14 5.1 14 4C14 2.9 13.1 2 12 2Z" fill="currentColor"/>
+                      <path d="M16 8H8L6 22H9L10 15L12 17L14 15L15 22H18L16 8Z" fill="currentColor"/>
+                    </svg>
+                  </div>
+                  <div className={styles.verificationInfo}>
+                    <div className={styles.verificationLabel}>VIDEO KYC</div>
+                    <h3 className={styles.verificationTitle}>Proof of Humanity</h3>
+                  </div>
+                </div>
+                <p className={styles.verificationDesc}>
+                  Video submission with community validation
+                </p>
+                <Button
+                  block
+                  size="large"
+                  type="primary"
+                  loading={loadingPoh}
+                  disabled={pohVerified}
+                  onClick={handleVerifyPoh}
+                  className={`${styles.btnVerify} ${styles.btnVerifySource}`}
+                >
+                  {pohVerified ? 'Verified ✓' : loadingPoh ? 'Processing...' : 'Verify'}
+                </Button>
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={12} lg={6}>
+              <Card className={styles.valueCard}>
+                <div className={styles.verificationHeader}>
+                  <div className={`${styles.verificationLogo} ${styles.logoBrightid}`}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="7" r="3" fill="currentColor"/>
+                      <circle cx="18" cy="14" r="2.5" fill="currentColor" opacity="0.7"/>
+                      <circle cx="6" cy="14" r="2.5" fill="currentColor" opacity="0.7"/>
+                      <circle cx="12" cy="19" r="2" fill="currentColor" opacity="0.5"/>
+                    </svg>
+                  </div>
+                  <div className={styles.verificationInfo}>
+                    <div className={styles.verificationLabel}>SOCIAL GRAPH</div>
+                    <h3 className={styles.verificationTitle}>BrightID</h3>
+                  </div>
+                </div>
+                <p className={styles.verificationDesc}>
+                  Social connection verification network
+                </p>
+                <Button
+                  block
+                  size="large"
+                  type="primary"
+                  loading={loadingBrightid}
+                  disabled={brightidVerified}
+                  onClick={handleVerifyBrightid}
+                  className={`${styles.btnVerify} ${styles.btnVerifySource}`}
+                >
+                  {brightidVerified ? 'Verified ✓' : loadingBrightid ? 'Processing...' : 'Verify'}
+                </Button>
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={12} lg={6}>
+              <Card className={`${styles.valueCard} ${styles.valueCardDisabled}`}>
+                <div className={styles.verificationHeader}>
+                  <div className={`${styles.verificationLogo} ${styles.logoBinance}`}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 4L8 8L12 12L16 8L12 4Z" fill="currentColor"/>
+                      <path d="M4 12L8 16L12 12L8 8L4 12Z" fill="currentColor" opacity="0.7"/>
+                      <path d="M20 12L16 8L12 12L16 16L20 12Z" fill="currentColor" opacity="0.7"/>
+                      <path d="M12 20L16 16L12 12L8 16L12 20Z" fill="currentColor" opacity="0.5"/>
+                    </svg>
+                  </div>
+                  <div className={styles.verificationInfo}>
+                    <div className={styles.verificationLabel}>EXCHANGE KYC</div>
+                    <h3 className={styles.verificationTitle}>Binance</h3>
+                  </div>
+                </div>
+                <p className={styles.verificationDesc}>
+                  Centralized exchange identity verification
+                </p>
+                <Button
+                  block
+                  size="large"
+                  type="default"
+                  disabled
+                  className={`${styles.btnVerify} ${styles.btnComingSoon}`}
+                >
+                  Coming Soon
                 </Button>
               </Card>
             </Col>

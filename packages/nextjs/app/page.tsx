@@ -13,7 +13,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { BACKEND_URL, getJson, postJson } from "../utils/api";
 import { encodeGitcoinProof, encodePohProof, encodeBrightIdProof } from "../utils/encode";
 import { BRIGHTID_ADAPTER_ADDRESS, GITCOIN_ADAPTER_ADDRESS, POH_ADAPTER_ADDRESS, VERIFY_AND_REGISTER_ABI } from "../utils/contracts";
-import { writeContract, getPublicClient } from "wagmi/actions";
+import { writeContract, waitForTransactionReceipt } from "wagmi/actions";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 import { Rocket } from "~~/src/assets/images";
 import { IDKitWidget, ISuccessResult } from "@worldcoin/idkit";
@@ -154,7 +154,7 @@ const Home: NextPage = () => {
       const data = await verifySource("gitcoin");
       
       toast.dismiss(t);
-      toast.loading("Submitting transaction…");
+      const t2 = toast.loading("Submitting transaction…");
       
       const proof = encodeGitcoinProof({
         userId: (data.userId || "0x0000000000000000000000000000000000000000000000000000000000000000") as `0x${string}`,
@@ -171,15 +171,28 @@ const Home: NextPage = () => {
         chainId: TARGET_CHAIN_ID,
       });
       
+      toast.dismiss(t2);
+      const t3 = toast.loading("Waiting for confirmation…");
+  
+      const receipt = await waitForTransactionReceipt(wagmiConfig, {
+        hash,
+        chainId: TARGET_CHAIN_ID,
+      });
+      
+      toast.dismiss(t3);
+      if (receipt.status === "reverted") {
+        throw new Error("Transaction reverted");
+      }
+      
       if (typeof window !== "undefined") window.localStorage.setItem("gitcoin_verified", "true");
       setGitcoinVerified(true);
       
-      toast.dismiss(t);
       toast.success("✅ Gitcoin verified!");
       toast.success(`Tx: ${hash.slice(0, 10)}…`, { icon: "🔗" });
       if (EXPLORER_TX) window.open(`${EXPLORER_TX}${hash}`, "_blank");
     } catch (e: any) {
-      toast.dismiss(t);
+      // Убираем все активные тосты при ошибке
+      toast.dismiss();
       const msg = e?.shortMessage || e?.message || "Gitcoin verification failed";
       toast.error(msg);
     } finally {
@@ -196,7 +209,7 @@ const Home: NextPage = () => {
       const data = await verifySource("poh");
       
       toast.dismiss(t);
-      toast.loading("Submitting transaction…");
+      const t2 = toast.loading("Submitting transaction…");
       
       const proof = encodePohProof({
         pohId: ((data.pohId || data.userId) || "0x0000000000000000000000000000000000000000000000000000000000000000") as `0x${string}`,
@@ -212,15 +225,29 @@ const Home: NextPage = () => {
         chainId: TARGET_CHAIN_ID,
       });
       
+      toast.dismiss(t2);
+      const t3 = toast.loading("Waiting for confirmation…");
+      const receipt = await waitForTransactionReceipt(wagmiConfig, {
+        hash,
+        chainId: TARGET_CHAIN_ID,
+      });
+      
+      toast.dismiss(t3);
+      
+      // Проверяем статус транзакции
+      if (receipt.status === "reverted") {
+        throw new Error("Transaction reverted");
+      }
+      
       if (typeof window !== "undefined") window.localStorage.setItem("poh_verified", "true");
       setPohVerified(true);
       
-      toast.dismiss(t);
       toast.success("✅PoH verified!");
       toast.success(`Tx: ${hash.slice(0, 10)}…`, { icon: "🔗" });
       if (EXPLORER_TX) window.open(`${EXPLORER_TX}${hash}`, "_blank");
     } catch (e: any) {
-      toast.dismiss(t);
+      // Убираем все активные тосты при ошибке
+      toast.dismiss();
       const msg = e?.shortMessage || e?.message || "PoH verification failed";
       toast.error(msg);
     } finally {
@@ -237,7 +264,7 @@ const Home: NextPage = () => {
       const data = await verifySource("brightid");
       
       toast.dismiss(t);
-      toast.loading("Submitting transaction…");
+      const t2 = toast.loading("Submitting transaction…");
       
       const proof = encodeBrightIdProof({
         contextId: ((data.contextId || data.userId) || "0x0000000000000000000000000000000000000000000000000000000000000000") as `0x${string}`,
@@ -253,15 +280,28 @@ const Home: NextPage = () => {
         chainId: TARGET_CHAIN_ID,
       });
       
+      toast.dismiss(t2);
+      const t3 = toast.loading("Waiting for confirmation…");
+      const receipt = await waitForTransactionReceipt(wagmiConfig, {
+        hash,
+        chainId: TARGET_CHAIN_ID,
+      });
+      
+      toast.dismiss(t3);
+      
+      if (receipt.status === "reverted") {
+        throw new Error("Transaction reverted");
+      }
+      
       if (typeof window !== "undefined") window.localStorage.setItem("brightid_verified", "true");
       setBrightidVerified(true);
       
-      toast.dismiss(t);
       toast.success("✅ BrightID verified!");
       toast.success(`Tx: ${hash.slice(0, 10)}…`, { icon: "🔗" });
       if (EXPLORER_TX) window.open(`${EXPLORER_TX}${hash}`, "_blank");
     } catch (e: any) {
-      toast.dismiss(t);
+      // Убираем все активные тосты при ошибке
+      toast.dismiss();
       const msg = e?.shortMessage || e?.message || "BrightID verification failed";
       toast.error(msg);
     } finally {
@@ -279,14 +319,32 @@ const Home: NextPage = () => {
     try {
       const user = await ensureReady();
       const hash = await writeWorldcoinOnChain(user, result);
-      toast.success(`World ID verified`);
+      
+      toast.dismiss(t);
+      const t2 = toast.loading("Waiting for confirmation…");
+      
+      // ✅ Ждём подтверждения транзакции
+      const receipt = await waitForTransactionReceipt(wagmiConfig, {
+        hash,
+        chainId: TARGET_CHAIN_ID,
+      });
+      
+      toast.dismiss(t2);
+      
+      // Проверяем статус транзакции
+      if (receipt.status === "reverted") {
+        throw new Error("Transaction reverted");
+      }
+      
+      toast.success(`✅ World ID verified`);
       toast.success(`Tx: ${hash.slice(0, 10)}…`, { icon: "🔗" });
       if (EXPLORER_TX) window.open(`${EXPLORER_TX}${hash}`, "_blank");
     } catch (e: any) {
+      // Убираем все активные тосты при ошибке
+      toast.dismiss();
       const msg = e?.shortMessage || e?.message || "World ID verification failed";
       toast.error(msg);
     } finally {
-      toast.dismiss(t);
       setLoadingWorld(false);
     }
   };

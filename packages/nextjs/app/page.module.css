@@ -179,12 +179,11 @@
 }
 
 .h3 {
-  font-size: 20px;
+  font-size: 19px;
   margin: 0 0 8px;
-  color: var(--heading-ink);
+  color: var(--text);
   letter-spacing: -0.01em;
-  font-weight: 700;
-  color: #22d3ee;
+  font-weight: 600;
 }
 
 .h3OnDark {
@@ -276,105 +275,149 @@
 .valueCard {
   background: var(--card) !important;
   border: 1px solid var(--border) !important;
-  min-height: 160px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 180px;
+  transition: all 0.25s ease;
   position: relative;
   overflow: hidden;
+  padding: 24px !important;
 }
 
-.valueCard::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(123, 97, 255, 0.1),
-    transparent 40%
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
+.valueCard:hover:not(.valueCardDisabled) {
+  border-color: rgba(123, 97, 255, 0.4) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
-.valueCard:hover {
-  border-color: rgba(123, 97, 255, 0.3) !important;
-  transform: translateY(-4px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+.valueCardDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.valueCard:hover::before {
-  opacity: 1;
+.valueCardDisabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .btnVerify {
-  height: 52px !important;
-  font-size: 16px !important;
+  height: 48px !important;
+  font-size: 15px !important;
   font-weight: 600 !important;
-  border-radius: 14px !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  position: relative !important;
-  overflow: hidden !important;
+  border-radius: 10px !important;
+  transition: all 0.2s ease !important;
+  text-transform: none !important;
+  letter-spacing: -0.01em !important;
 }
 
 .btnWorldcoin {
-  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  background: #000000 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #ffffff !important;
-  box-shadow: 
-    0 4px 20px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
 }
 
 .btnWorldcoin:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%) !important;
-  transform: translateY(-2px) scale(1.02) !important;
-  box-shadow: 
-    0 8px 30px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
+  background: #1a1a1a !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
-.btnAggregator {
-  background: linear-gradient(135deg, #7b61ff 0%, #b794ff 50%, #22d3ee 100%) !important;
-  border: none !important;
+.btnVerifySource {
+  background: var(--primary-500) !important;
+  border: 1px solid var(--primary-500) !important;
   color: #ffffff !important;
-  box-shadow: 
-    0 4px 20px rgba(123, 97, 255, 0.4),
-    0 4px 20px rgba(34, 211, 238, 0.2) !important;
-  background-size: 200% 100% !important;
-  animation: shimmer 3s ease-in-out infinite !important;
 }
 
-.btnAggregator:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.02) !important;
-  box-shadow: 
-    0 8px 35px rgba(123, 97, 255, 0.5),
-    0 8px 35px rgba(34, 211, 238, 0.3) !important;
+.btnVerifySource:hover:not(:disabled) {
+  background: var(--primary-600) !important;
+  border-color: var(--primary-600) !important;
+  transform: translateY(-1px) !important;
 }
 
-.btnAggregator:disabled {
-  background: linear-gradient(135deg, #1a7f5a 0%, #22a06f 100%) !important;
-  color: #ffffff !important;
-  opacity: 1 !important;
+.btnVerifySource:disabled {
+  background: rgba(34, 197, 94, 0.15) !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
+  color: rgba(34, 197, 94, 1) !important;
   cursor: not-allowed !important;
-  animation: none !important;
 }
 
-.btnAggregator:disabled::after {
-  content: '✓';
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
+.btnComingSoon {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  cursor: not-allowed !important;
+}
+
+.verificationHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.verificationLogo {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
   font-size: 20px;
-  font-weight: bold;
+  flex-shrink: 0;
 }
 
-@keyframes shimmer {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
+.logoWorldcoin {
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logoGitcoin {
+  background: linear-gradient(135deg, #00E6A0 0%, #00D494 100%);
+  color: #000000;
+}
+
+.logoPoh {
+  background: linear-gradient(135deg, #FF6B9D 0%, #FF4A7D 100%);
+  color: #ffffff;
+}
+
+.logoBrightid {
+  background: linear-gradient(135deg, #FDB32A 0%, #FFA500 100%);
+  color: #ffffff;
+}
+
+.logoBinance {
+  background: linear-gradient(135deg, #F3BA2F 0%, #E8A02A 100%);
+  color: #000000;
+}
+
+.verificationInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.verificationLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 2px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.verificationTitle {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.verificationDesc {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 16px;
+  line-height: 1.5;
 }
 
 .steps {

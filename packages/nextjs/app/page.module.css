@@ -83,15 +83,53 @@
 }
 
 .btnPrimary {
-  background: var(--primary-500) !important;
-  border-color: var(--primary-500) !important;
-  box-shadow: 0 8px 30px rgba(123, 97, 255, 0.3) !important;
+  background: linear-gradient(135deg, var(--primary-500) 0%, #9d7bff 100%) !important;
+  border: none !important;
+  box-shadow: 
+    0 4px 20px rgba(123, 97, 255, 0.4),
+    0 0 0 1px rgba(123, 97, 255, 0.2) inset !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.btnPrimary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.btnPrimary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 
+    0 8px 30px rgba(123, 97, 255, 0.5),
+    0 0 0 1px rgba(123, 97, 255, 0.3) inset !important;
+}
+
+.btnPrimary:hover::before {
+  opacity: 1;
+}
+
+.btnPrimary:active {
+  transform: translateY(0) !important;
 }
 
 .btnSecondary {
-  background: transparent !important;
+  background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid var(--border) !important;
   color: var(--text) !important;
+  backdrop-filter: blur(10px) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btnSecondary:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
 }
 
 .providers {
@@ -238,7 +276,105 @@
 .valueCard {
   background: var(--card) !important;
   border: 1px solid var(--border) !important;
-  min-height: 140px;
+  min-height: 160px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.valueCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(123, 97, 255, 0.1),
+    transparent 40%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.valueCard:hover {
+  border-color: rgba(123, 97, 255, 0.3) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.valueCard:hover::before {
+  opacity: 1;
+}
+
+.btnVerify {
+  height: 52px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  border-radius: 14px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.btnWorldcoin {
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+}
+
+.btnWorldcoin:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 
+    0 8px 30px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
+}
+
+.btnAggregator {
+  background: linear-gradient(135deg, #7b61ff 0%, #b794ff 50%, #22d3ee 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: 
+    0 4px 20px rgba(123, 97, 255, 0.4),
+    0 4px 20px rgba(34, 211, 238, 0.2) !important;
+  background-size: 200% 100% !important;
+  animation: shimmer 3s ease-in-out infinite !important;
+}
+
+.btnAggregator:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 
+    0 8px 35px rgba(123, 97, 255, 0.5),
+    0 8px 35px rgba(34, 211, 238, 0.3) !important;
+}
+
+.btnAggregator:disabled {
+  background: linear-gradient(135deg, #1a7f5a 0%, #22a06f 100%) !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+  animation: none !important;
+}
+
+.btnAggregator:disabled::after {
+  content: '✓';
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  font-weight: bold;
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .steps {

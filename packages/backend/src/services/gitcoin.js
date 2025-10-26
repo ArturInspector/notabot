@@ -30,12 +30,25 @@ class GitcoinService {
       };
 
     } catch (error) {
+      console.error('Gitcoin API Error Details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        scorerId: config.GITCOIN_SCORER_ID
+      });
+
       if (error.response?.status === 404) {
         throw new Error('NO_PASSPORT_FOUND');
       }
       
       if (error.response?.status === 401) {
         throw new Error('INVALID_API_KEY');
+      }
+
+      if (error.response?.status === 400) {
+        const detail = error.response?.data?.detail || 'Bad Request';
+        throw new Error(`BAD_REQUEST: ${detail}`);
       }
 
       if (error.code === 'ECONNABORTED') {

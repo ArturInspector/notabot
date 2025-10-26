@@ -52,6 +52,33 @@ app.post('/api/gitcoin/verify', validateAddress, async (req, res) => {
   try {
     logger.info('Gitcoin verification request', { userAddress });
 
+    if (config.DEMO_MODE) {
+      logger.warn('DEMO MODE: Skipping real Gitcoin API', { userAddress });
+      const score = 99;
+      const rawScore = '99.0';
+      const userId = signerService.createUserId('gitcoin', userAddress, rawScore);
+      const timestamp = Math.floor(Date.now() / 1000);
+      const signature = await signerService.signGitcoinProof(
+        userAddress,
+        userId,
+        score,
+        timestamp
+      );
+
+      return res.json({
+        success: true,
+        demo: true,
+        data: {
+          userId,
+          score,
+          timestamp,
+          signature,
+          expiresAt: timestamp + config.PROOF_VALIDITY_SECONDS,
+          backendAddress: signerService.getAddress()
+        }
+      });
+    }
+
     const { score, rawScore } = await gitcoinService.getPassportScore(userAddress);
     
     if (!gitcoinService.isScoreValid(score)) {

@@ -13,7 +13,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { BACKEND_URL, getJson, postJson } from "../utils/api";
 import { encodeGitcoinProof, encodePohProof, encodeBrightIdProof } from "../utils/encode";
 import { BRIGHTID_ADAPTER_ADDRESS, GITCOIN_ADAPTER_ADDRESS, POH_ADAPTER_ADDRESS, VERIFY_AND_REGISTER_ABI } from "../utils/contracts";
-import { writeContract } from "wagmi/actions";
+import { writeContract, getPublicClient } from "wagmi/actions";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 import { Rocket } from "~~/src/assets/images";
 import { IDKitWidget, ISuccessResult } from "@worldcoin/idkit";
@@ -142,7 +142,13 @@ const Home: NextPage = () => {
     return hash;
   };
 
-  const submitAggregatorsOnChain = async (user: `0x${string}`, gitcoin: DemoData, poh: DemoData, brightid: DemoData) => {
+  const submitAggregatorsOnChain = async (
+    user: `0x${string}`, 
+    gitcoin: DemoData, 
+    poh: DemoData, 
+    brightid: DemoData,
+    onProgress?: (step: string) => void
+  ) => {
     const gitcoinProof = encodeGitcoinProof({
       userId: (gitcoin.userId || "0x0000000000000000000000000000000000000000000000000000000000000000") as `0x${string}`,
       score: gitcoin.score ?? 0,
@@ -159,6 +165,11 @@ const Home: NextPage = () => {
       timestamp: brightid.timestamp,
       signature: brightid.signature,
     });
+    
+    // CRITICAL: Wait for each tx confirmation before sending next to avoid nonce collision
+    const publicClient = getPublicClient(wagmiConfig);
+    
+    onProgress?.("Sending Gitcoin verification (1/3)…");
     const tx1 = await writeContract(wagmiConfig, {
       abi: VERIFY_AND_REGISTER_ABI,
       address: GITCOIN_ADAPTER_ADDRESS,
@@ -166,6 +177,12 @@ const Home: NextPage = () => {
       args: [user, gitcoinProof],
       chainId: TARGET_CHAIN_ID,
     });
+    
+    // Wait for tx1 to be confirmed before sending tx2
+    onProgress?.("Waiting for Gitcoin confirmation…");
+    await publicClient.waitForTransactionReceipt({ hash: tx1 });
+    
+    onProgress?.("Sending PoH verification (2/3)…");
     const tx2 = await writeContract(wagmiConfig, {
       abi: VERIFY_AND_REGISTER_ABI,
       address: POH_ADAPTER_ADDRESS,
@@ -173,6 +190,12 @@ const Home: NextPage = () => {
       args: [user, pohProof],
       chainId: TARGET_CHAIN_ID,
     });
+    
+    // Wait for tx2 to be confirmed before sending tx3
+    onProgress?.("Waiting for PoH confirmation…");
+    await publicClient.waitForTransactionReceipt({ hash: tx2 });
+    
+    onProgress?.("Sending BrightID verification (3/3)…");
     const tx3 = await writeContract(wagmiConfig, {
       abi: VERIFY_AND_REGISTER_ABI,
       address: BRIGHTID_ADAPTER_ADDRESS,
@@ -180,6 +203,10 @@ const Home: NextPage = () => {
       args: [user, brightIdProof],
       chainId: TARGET_CHAIN_ID,
     });
+    
+    onProgress?.("Waiting for BrightID confirmation…");
+    await publicClient.waitForTransactionReceipt({ hash: tx3 });
+    
     return [tx1, tx2, tx3] as const;
   };
 
@@ -208,13 +235,20 @@ const Home: NextPage = () => {
   const handleVerifyAggregators = async () => {
     if (aggVerified) return;
     setLoadingAgg(true);
-    const t = toast.loading("Verifying Gitcoin, PoH, BrightID…");
+    let t = toast.loading("Fetching verification proofs…");
     try {
       const user = await ensureReady();
       const [gitcoin, poh, brightid] = await Promise.all([verifySource("gitcoin"), verifySource("poh"), verifySource("brightid")]);
-      const hashes = await submitAggregatorsOnChain(user, gitcoin, poh, brightid);
+      
+      toast.dismiss(t);
+      const hashes = await submitAggregatorsOnChain(user, gitcoin, poh, brightid, (step) => {
+        toast.dismiss(t);
+        t = toast.loading(step);
+      });
+      
       markAggVerified();
-      toast.success("Verification complete. Tokens minted");
+      toast.dismiss(t);
+      toast.success("✅ All verifications complete! Tokens minted.");
       hashes.forEach(h => {
         toast.success(`Tx: ${h.slice(0, 10)}…`, { icon: "🔗" });
         if (EXPLORER_TX) window.open(`${EXPLORER_TX}${h}`, "_blank");
@@ -262,13 +296,23 @@ const Home: NextPage = () => {
           <Row gutter={[16, 16]} justify="center">
             <Col xs={24} sm={18} md={10}>
               <Card className={styles.valueCard}>
-                <h3 className={styles.h3}>World ID</h3>
+                <h3 className={styles.h3}>🌍 World ID</h3>
+                <p className={styles.text} style={{ fontSize: '13px', marginBottom: '14px', opacity: 0.8 }}>
+                  Biometric verification via iris scan
+                </p>
                 <IDKitWidget app_id={WORLDCOIN_APP_ID} action={WORLDCOIN_ACTION} onSuccess={onWorldcoinSuccess}>
                   {({ open }) => {
                     worldcoinOpenRef.current = open;
                     return (
-                      <Button block size="large" type="primary" loading={loadingWorld} onClick={handleWorldcoinClick}>
-                        Verify with World ID
+                      <Button 
+                        block 
+                        size="large" 
+                        type="primary" 
+                        loading={loadingWorld} 
+                        onClick={handleWorldcoinClick}
+                        className={`${styles.btnVerify} ${styles.btnWorldcoin}`}
+                      >
+                        {loadingWorld ? 'Processing...' : 'Verify with World ID'}
                       </Button>
                     );
                   }}
@@ -277,7 +321,10 @@ const Home: NextPage = () => {
             </Col>
             <Col xs={24} sm={18} md={10}>
               <Card className={styles.valueCard}>
-                <h3 className={styles.h3}>Gitcoin • PoH • BrightID</h3>
+                <h3 className={styles.h3}>🎯 Multi-Source Verification</h3>
+                <p className={styles.text} style={{ fontSize: '13px', marginBottom: '14px', opacity: 0.8 }}>
+                  Gitcoin Passport • PoH • BrightID
+                </p>
                 <Button
                   block
                   size="large"
@@ -285,8 +332,9 @@ const Home: NextPage = () => {
                   loading={loadingAgg}
                   disabled={aggVerified}
                   onClick={handleVerifyAggregators}
+                  className={`${styles.btnVerify} ${styles.btnAggregator}`}
                 >
-                  {aggVerified ? <span style={{ color: "green" }}>Already Verified</span> : "Verify Aggregators (Demo)"}
+                  {aggVerified ? 'Verified Successfully' : loadingAgg ? 'Verifying...' : 'Verify All Sources'}
                 </Button>
               </Card>
             </Col>

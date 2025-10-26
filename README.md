@@ -2,47 +2,48 @@
 
 # 🤖 NotABot
 
-### "Stripe for Web3 Identity" - Universal Proof-of-Humanity Aggregator
+### "Stripe for Web3 Identity"
+https://mainhntrepo-nextjs-uurk.vercel.app/
+One-stop proof-of-humanity aggregator. Verify once, access anywhere.
 
-**Verify once with Worldcoin/Gitcoin/CEX KYC → Get Soulbound NFT → Access any dApp**
-
-[![Built with Scaffold-ETH 2](https://img.shields.io/badge/Built%20with-Scaffold--ETH%202-blue)](https://scaffoldeth.io)
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-363636?logo=solidity)](https://soliditylang.org)
-[![Base L2](https://img.shields.io/badge/Network-Base%20L2-0052FF)](https://base.org)
+[![Base L2](https://img.shields.io/badge/Network-Base%20Sepolia-0052FF)](https://base.org)
+[![Status Network](https://img.shields.io/badge/Network-Status%20Testnet-5B6CD9)](https://status.network)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-[🎥 Live Demo](#) • [📖 Integration Guide](./INTEGRATION.md) • [🏗️ Architecture](./contracts/ARCHITECTURE.MD) • [🔒 Security](./SAFE.MD) • [📡 API Docs](./packages/backend/API.md)
+[🏗️ Architecture](./ARCHITECTURE_DIAGRAM.md) • [📡 API Docs](./packages/backend/API.md) • [🔐 Contracts](./contracts/ARCHITECTURE.MD)
 
 </div>
 
 ---
 
-## 🎯 The Problem
+## The Problem
 
-**Web3 identity is fragmented:**
-- Users verify separately for EVERY dApp (Worldcoin here, Gitcoin there...)
-- Developers integrate 5+ different verification APIs with different formats
-- **60-90% of airdrops stolen by Sybil bots** = $1B+/year losses in GameFi
-- 500M+ CEX users already KYC'd but can't leverage it on-chain
+Airdrops are getting destroyed by bots. 60-90% of participants aren't real humans. Arbitrum lost $50M+ in 2023 alone.
 
-## ✅ Our Solution
+Existing solutions are fragmented:
+- Worldcoin requires physical orb access
+- Gitcoin Passport needs manual stamp collection  
+- Proof of Humanity has high friction
+- Every project integrates these separately (2-4 weeks each)
 
-**One integration, multiple verification sources:**
+## Our Solution
+
+One contract. Multiple verification sources. Zero complexity.
 
 ```solidity
-// dApp code (ONE LINE):
-require(oracle.isVerifiedHuman(msg.sender), "Humans only");
+// Your dApp code:
+bool isHuman = IHumanityOracle(AGGREGATOR).isVerifiedHuman(user);
 ```
 
-**Behind the scenes:**
-- ✅ Worldcoin (biometric ZK proof)
-- ✅ Gitcoin Passport (reputation score)
-- 🔜 Binance/Coinbase KYC (roadmap)
+Supports:
+- Worldcoin (ZK biometric proof)
+- Gitcoin Passport (reputation score)
+- Proof of Humanity (video verification)
+- BrightID (social graph)
+- Binance KYC (coming soon)
 
-**Users get:**
-- 1 HMT Token (ERC-20 reward)
-- 1 Soulbound NFT (permanent proof)
-- Universal identity across ALL dApps
+Each verification gives users 1 HMT token. More verifications = higher trust score.
 
 ---
 
@@ -80,28 +81,24 @@ Visit `http://localhost:3000`
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
-### Core Contracts (Base Sepolia - LIVE ✅)
+**Core Contracts (Base Sepolia + Status Network)**
 
-| Contract | Description | Address |
-|----------|-------------|---------|
-| `MainAggregator.sol` | Core orchestrator, registers verifications | [0x8Cec...2BD](https://sepolia.basescan.org/address/0x8Cec9277d761f947e29EBeACc4035DDCDB10c2BD) |
-| `VerificationToken.sol` | HMT ERC-20 token (1 per verification) | [View on BaseScan](#) |
+| Contract | Address |
+|----------|---------|
+| MainAggregator | `0xFcB998E4c6A0157dEF6AC724Da1279aA6Ac2743D` |
+| VerificationToken (HMT) | `0x9f12107874B1ED8B10AED87e19E4BDf5ea17a45B` |
+| GitcoinAdapter | `0xCd52fb37d7Ff8d164fB49274E7fd8e2b81b5710b` |
+| PoHAdapter | `0xc2fF5af5C12B7085dC49415Cb81e29B8524E06C0` |
+| BrightIDAdapter | `0xAeCEbf9B937D1B36C2ed5D2C2190673eA3CC82de` |
 
-### Adapters (Modular & Pluggable - LIVE ✅)
-
-| Adapter | Status | Type | Address |
-|---------|--------|------|---------|
-| **WorldcoinAdapter** | ✅ Live | ZK proof via World ID Router | [View](#) |
-| **GitcoinAdapter** | ✅ Live | Passport API + ECDSA signature | [0xCd52...10b](https://sepolia.basescan.org/address/0xCd52fb37d7Ff8d164fB49274E7fd8e2b81b5710b) |
-| **PoHAdapter** | ✅ Live | Proof of Humanity Oracle | [View](#) |
-| **BrightIDAdapter** | ✅ Live | BrightID Social Graph | [View](#) |
-
-**Design Pattern:**
+**How it works:**
 ```
-User → Adapter (verify proof) → MainAggregator (register) → Mint HMT + SBT
+User → Adapter verifies proof → MainAggregator registers → Mints 1 HMT token
 ```
+
+See detailed diagrams: [ARCHITECTURE_DIAGRAM.md](./ARCHITECTURE_DIAGRAM.md)
 
 ---
 
@@ -150,36 +147,34 @@ const { writeAsync: verifyWorldcoin } = useScaffoldWriteContract({
 
 ---
 
-## 🎪 Live Demo (Hackathon)
-
-**Try it now:** [notabot-demo.vercel.app](#) (Coming soon)
+## Live Demo
 
 **Backend API:** https://mainhntrepo-production.up.railway.app
 
-**Test with Demo Mode:**
+**Test it:**
 ```bash
 curl -X POST https://mainhntrepo-production.up.railway.app/api/demo/verify \
   -H "Content-Type: application/json" \
   -d '{"userAddress": "0xYOUR_ADDRESS", "source": "gitcoin"}'
 ```
 
-**Flow:**
-1. Connect wallet → Choose verification source
-2. Get signed proof from backend → Submit to contract
-3. Receive 1 HMT token → Now verified on-chain!
-4. Any dApp can check: `isVerifiedHuman(yourAddress)` ✅
+**How it works:**
+1. Connect wallet, pick verification source
+2. Backend signs your proof
+3. Submit to contract → get 1 HMT token
+4. Now you're verified on-chain
 
 ---
 
-## 🛡️ Security Features
+## Security
 
-- **Anti-Sybil:** Cross-source uniqueId prevents duplicate verifications
-- **Replay Protection:** Timestamp window (1 hour max)
-- **Privacy-Preserving:** ZK proofs + no raw data on-chain
-- **Battle-Tested:** OpenZeppelin v5.x (AccessControl, ReentrancyGuard, Pausable)
-- **CEI Pattern:** Checks-Effects-Interactions throughout
+- Duplicate prevention via `usedUniqueIds` mapping
+- Timestamp expiry (1 hour max)
+- ECDSA signature verification
+- OpenZeppelin contracts (ReentrancyGuard, Pausable)
+- CEI pattern everywhere
 
-[Full Security Audit](./SAFE.MD)
+See [SAFE.MD](./SAFE.MD) for details.
 
 ---
 

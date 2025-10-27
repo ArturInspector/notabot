@@ -634,6 +634,11 @@
   flex-wrap: wrap;
 }
 
+.awardLink {
+  text-decoration: none;
+  display: block;
+}
+
 .awardCard {
   position: relative;
   padding: 24px 32px;
@@ -647,14 +652,29 @@
   backdrop-filter: blur(10px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 280px;
+  cursor: pointer;
 }
 
-.awardCard:hover {
-  border-color: rgba(251, 191, 36, 0.35);
-  transform: translateY(-2px);
+.awardLink:hover .awardCard {
+  border-color: rgba(251, 191, 36, 0.4);
   box-shadow: 
-    0 8px 24px rgba(251, 191, 36, 0.12),
-    0 0 0 1px rgba(251, 191, 36, 0.15) inset;
+    0 8px 24px rgba(251, 191, 36, 0.15),
+    0 0 0 1px rgba(251, 191, 36, 0.2) inset;
+}
+
+.awardCard::after {
+  content: '↗';
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 16px;
+  color: rgba(251, 191, 36, 0.4);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.awardLink:hover .awardCard::after {
+  opacity: 1;
 }
 
 .awardIcon {

@@ -564,24 +564,26 @@ const Home: NextPage = () => {
           >
             <div className={styles.awardsLabel}>Recognized By</div>
             <div className={styles.awardsGrid}>
-              <motion.div 
-                className={styles.awardCard}
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              >
-                <div className={styles.awardLogoWrapper}>
-                  <Image 
-                    src="/eth-bishkek-logo.png" 
-                    alt="ETH Bishkek" 
-                    width={120} 
-                    height={120}
-                    className={styles.awardLogo}
-                  />
-                </div>
-                <div className={styles.awardTitle}>Winner</div>
-                <div className={styles.awardEvent}>ETH Bishkek 2025</div>
-                <div className={styles.awardLocation}>Kyrgyzstan · October 2025</div>
-              </motion.div>
+              <Link href="https://ethbishkek.xyz" target="_blank" rel="noopener noreferrer" className={styles.awardLink}>
+                <motion.div 
+                  className={styles.awardCard}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <div className={styles.awardLogoWrapper}>
+                    <Image 
+                      src="/eth-bishkek-logo.png" 
+                      alt="ETH Bishkek" 
+                      width={120} 
+                      height={120}
+                      className={styles.awardLogo}
+                    />
+                  </div>
+                  <div className={styles.awardTitle}>Winner</div>
+                  <div className={styles.awardEvent}>ETH Bishkek 2025</div>
+                  <div className={styles.awardLocation}>Kyrgyzstan · October 2025</div>
+                </motion.div>
+              </Link>
             </div>
           </motion.div>
         </div>

@@ -17,6 +17,7 @@ import {
 } from "antd";
 import { motion, type Variants, easeOut } from "framer-motion";
 import Link from "next/link";
+import { VerificationButton } from "~~/components/notabot-widget";
 
 const { Sider, Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
@@ -33,6 +34,7 @@ const stagger: Variants = {
 
 const sections = [
   { key: "overview", label: "Overview" },
+  { key: "widget", label: "Frontend Widget" },
   { key: "quickstart", label: "Quick Start" },
   { key: "solidity", label: "Solidity Interface" },
   { key: "examples", label: "Usage Examples" },
@@ -97,15 +99,15 @@ export default function Docs() {
                         NotABot Integration Guide
                       </Title>
                       <Paragraph className={styles.lead}>
-                        Like OpenZeppelin, but for sybil resistance. Copy HumanityProtected mixin from GitHub, 
+                        Like OpenZeppelin, but for sybil resistance. Install via NPM, 
                         add onlyHuman modifier, protect your contracts from bots. 
-                        Aggregates Worldcoin, Gitcoin Passport, BrightID on multiple chains.
+                        Aggregates Worldcoin, Gitcoin Passport, PoH, BrightID on multiple chains.
                       </Paragraph>
                       <Space wrap>
-                        <Tag className={styles.tagPrimary}>Status Network</Tag>
                         <Tag className={styles.tagPrimary}>Base Sepolia</Tag>
-                        <Tag className={styles.tagSoft}>Abstract Mixin</Tag>
-                        <Tag className={styles.tagMono}>git clone</Tag>
+                        <Tag className={styles.tagPrimary}>Status Network</Tag>
+                        <Tag className={styles.tagSoft}>NPM Package</Tag>
+                        <Tag className={styles.tagMono}>@notabot/contracts</Tag>
                       </Space>
                       <div className={styles.ctaRow}>
                         <Link href="#quickstart">
@@ -130,6 +132,88 @@ export default function Docs() {
               </motion.div>
             </section>
 
+            <section id="widget" className={styles.section}>
+              <motion.div variants={fadeUp}>
+                <Title level={2} className={styles.h2}>
+                  Frontend Widget
+                </Title>
+                <Paragraph className={styles.lead}>
+                  Drop-in React component for user verification. Add to any Next.js or React app.
+                </Paragraph>
+
+                <Card className={styles.demoCard}>
+                  <div style={{ padding: '24px 24px 20px' }}>
+                    <Title level={4} className={styles.h4}>Live Demo</Title>
+                    <Paragraph className={styles.dim} style={{ margin: 0 }}>
+                      Click to test the verification widget
+                    </Paragraph>
+                  </div>
+                  <div className={styles.demoArea}>
+                    <VerificationButton showCount={true} />
+                  </div>
+                </Card>
+
+                <Divider className={styles.divider} />
+
+                <Tabs
+                  className={styles.tabs}
+                  items={[
+                    {
+                      key: "react",
+                      label: "React / Next.js",
+                      children: (
+                        <Card className={styles.codeCard}>
+                          <Paragraph className={styles.dim}>Installation</Paragraph>
+                          <pre className={styles.code}>
+                            <code>{`npm install @notabot/react wagmi viem`}</code>
+                          </pre>
+                          <Divider className={styles.divider} />
+                          <Paragraph className={styles.dim}>Usage</Paragraph>
+                          <pre className={styles.codeLg}>
+                            <code>{`import { VerificationButton } from '@notabot/react';
+
+function App() {
+  return (
+    <VerificationButton 
+      onVerified={(count) => alert(\`Verified: \${count}/4\`)}
+      variant="primary"
+      showCount={true}
+    />
+  );
+}`}</code>
+                          </pre>
+                        </Card>
+                      ),
+                    },
+                    {
+                      key: "vanilla",
+                      label: "Vanilla JS",
+                      children: (
+                        <Card className={styles.codeCard}>
+                          <Paragraph className={styles.dim}>Include Script</Paragraph>
+                          <pre className={styles.codeLg}>
+                            <code>{`<script src="https://unpkg.com/@notabot/widget"></script>
+
+<div id="notabot-verify"></div>
+
+<script>
+  NotABot.init({
+    containerId: 'notabot-verify',
+    chainId: 84532,
+    onVerified: (status) => {
+      console.log('Verified:', status);
+    }
+  });
+</script>`}</code>
+                          </pre>
+                        </Card>
+                      ),
+                    },
+                  ]}
+                />
+              </motion.div>
+            </section>
+
             <section id="quickstart" className={styles.section}>
               <motion.div variants={fadeUp}>
                 <Title level={2} className={styles.h2}>
@@ -139,26 +223,28 @@ export default function Docs() {
                   <Col xs={24} md={12}>
                     <Card className={styles.stepCard}>
                       <Title level={4} className={styles.h4}>
-                        1. Clone & Copy
+                        1. Install Package
                       </Title>
                       <pre className={styles.code}>
-                        <code>{`git clone https://github.com/your/repo
-cp packages/hardhat/contracts/base/HumanityProtected.sol .
-cp packages/hardhat/contracts/interfaces/IHumanityOracle.sol .`}</code>
+                        <code>{`npm install @notabot/contracts
+
+# or
+
+yarn add @notabot/contracts`}</code>
                       </pre>
                     </Card>
                   </Col>
                   <Col xs={24} md={12}>
                     <Card className={styles.stepCard}>
                       <Title level={4} className={styles.h4}>
-                        2. Inherit & Use
+                        2. Import & Use
                       </Title>
                       <pre className={styles.code}>
-                        <code>{`import "./HumanityProtected.sol";
+                        <code>{`import "@notabot/contracts/HumanityProtected.sol";
 
 contract MyGame is HumanityProtected {
-  constructor() HumanityProtected(ORACLE_ADDR) {}
-  function play() external onlyHuman { }
+  constructor() HumanityProtected(ORACLE) {}
+  function play() external onlyHuman {}
 }`}</code>
                       </pre>
                     </Card>
@@ -174,22 +260,27 @@ contract MyGame is HumanityProtected {
                 </Title>
                 <Card className={styles.codeCard}>
                   <pre className={styles.codeLg}>
-                    <code>{`import "./HumanityProtected.sol";
+                    <code>{`// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
 
-// MainAggregator on Status Network
+import "@notabot/contracts/base/HumanityProtected.sol";
+
+// MainAggregator deployed at same address on all networks
 address constant ORACLE = 0x8Cec9277d761f947e29EBeACc4035DDCDB10c2BD;
 
 contract YourContract is HumanityProtected {
     constructor() HumanityProtected(ORACLE) {}
     
-    // Only verified humans can call
     function protectedFunction() external onlyHuman {
-        // your logic
+        // Only verified humans can call this
     }
     
-    // Require minimum trust score (2+ verifications)
     function premiumFeature() external minTrustScore(2) {
-        // requires 2+ sources
+        // Requires 2+ verification sources
+    }
+    
+    function checkUser(address user) external view returns (bool) {
+        return _isVerifiedHuman(user);
     }
 }`}</code>                                                                                                                                                                              
                   </pre>
@@ -211,9 +302,19 @@ contract YourContract is HumanityProtected {
                       children: (
                         <Card className={styles.codeCard}>
                           <pre className={styles.codeLg}>
-                            <code>{`contract GameNFT is ERC721, HumanityProtected {
+                            <code>{`import "@notabot/contracts/base/HumanityProtected.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+
+contract GameNFT is ERC721, HumanityProtected {
+  uint256 private _nextTokenId;
+  
+  constructor() 
+    ERC721("GameNFT", "GNFT")
+    HumanityProtected(ORACLE) 
+  {}
+  
   function mint() external onlyHuman {
-    _safeMint(msg.sender, nextTokenId++);
+    _safeMint(msg.sender, _nextTokenId++);
   }
 }`}</code>
                           </pre>
@@ -241,8 +342,20 @@ contract YourContract is HumanityProtected {
                       children: (
                         <Card className={styles.codeCard}>
                           <pre className={styles.codeLg}>
-                            <code>{`contract Airdrop is HumanityProtected {
+                            <code>{`import "@notabot/contracts/base/HumanityProtected.sol";
+
+contract Airdrop is HumanityProtected {
+  IERC20 public token;
+  uint256 public constant AMOUNT = 100 * 1e18;
+  mapping(address => bool) public claimed;
+  
+  constructor(address _token) HumanityProtected(ORACLE) {
+    token = IERC20(_token);
+  }
+  
   function claim() external onlyHuman {
+    require(!claimed[msg.sender], "Already claimed");
+    claimed[msg.sender] = true;
     token.transfer(msg.sender, AMOUNT);
   }
 }`}</code>
@@ -346,13 +459,21 @@ contract YourContract is HumanityProtected {
                     <Col xs={24}>
                       <Paragraph className={styles.dim}>
                         <Text className={styles.di1} strong>
-                          Networks:
+                          NPM Package:
                         </Text>{" "}
-                        Status Network Sepolia (1660990954) • Base Sepolia (84532)
+                        <Text className={styles.di1} code>
+                          @notabot/contracts
+                        </Text>
                       </Paragraph>
                       <Paragraph className={styles.dim}>
                         <Text className={styles.di1} strong>
-                          MainAggregator (same on both):
+                          Supported Networks:
+                        </Text>{" "}
+                        Base Sepolia (84532) • Status Network Sepolia (1660990954)
+                      </Paragraph>
+                      <Paragraph className={styles.dim}>
+                        <Text className={styles.di1} strong>
+                          MainAggregator:
                         </Text>{" "}
                         <Text className={styles.di1} code>
                           0x8Cec9277d761f947e29EBeACc4035DDCDB10c2BD
@@ -372,7 +493,7 @@ contract YourContract is HumanityProtected {
                         <Text className={styles.di1} strong>
                           Cost:
                         </Text>{" "}
-                        ~$0.0001 per check
+                        &lt;$0.0001 per check
                       </Paragraph>
                     </Col>
                     <Col xs={24} md={8}>
@@ -380,7 +501,7 @@ contract YourContract is HumanityProtected {
                         <Text className={styles.di1} strong>
                           Type:
                         </Text>{" "}
-                        View call (read-only)
+                        View (zero gas)
                       </Paragraph>
                     </Col>
                   </Row>

@@ -366,7 +366,7 @@ const Home: NextPage = () => {
           <motion.h1 variants={fadeUp} className={styles.title}>NotABot</motion.h1>
           <motion.p variants={fadeUp} className={styles.subtitle}>One API. Every proof-of-humanity source.</motion.p>
           <motion.div variants={fadeUp} className={styles.ctaRow}>
-            <Link href="/docs" className={styles.ctaPrimary}>
+            <Link href="/docs">
               <Button size="large" type="primary" className={styles.btnPrimary}>Read the Docs →</Button>
             </Link>
             <Button size="large" className={styles.btnSecondary} onClick={onConnectClick}>{isConnected ? "Connected" : "Connect Wallet"}</Button>

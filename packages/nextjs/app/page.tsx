@@ -554,6 +554,39 @@ const Home: NextPage = () => {
         </div>
       </section>
 
+      <section className={styles.awardsSection}>
+        <div className={styles.awardsContainer}>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <div className={styles.awardsLabel}>Recognized By</div>
+            <div className={styles.awardsGrid}>
+              <motion.div 
+                className={styles.awardCard}
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <div className={styles.awardLogoWrapper}>
+                  <Image 
+                    src="/eth-bishkek-logo.png" 
+                    alt="ETH Bishkek" 
+                    width={120} 
+                    height={120}
+                    className={styles.awardLogo}
+                  />
+                </div>
+                <div className={styles.awardTitle}>Winner</div>
+                <div className={styles.awardEvent}>ETH Bishkek 2025</div>
+                <div className={styles.awardLocation}>Kyrgyzstan · October 2025</div>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       <section className={styles.section} id="problem">
         <div className={styles.container}>
           <Row gutter={[24, 24]} align="middle">

@@ -1,5 +1,6 @@
 import { Address } from "viem";
 
+export const MAIN_AGGREGATOR_ADDRESS = (process.env.NEXT_PUBLIC_MAIN_AGGREGATOR || "") as Address;
 export const GITCOIN_ADAPTER_ADDRESS = (process.env.NEXT_PUBLIC_GITCOIN_ADAPTER || "") as Address;
 export const POH_ADAPTER_ADDRESS = (process.env.NEXT_PUBLIC_POH_ADAPTER || "") as Address;
 export const BRIGHTID_ADAPTER_ADDRESS = (process.env.NEXT_PUBLIC_BRIGHTID_ADAPTER || "") as Address;
@@ -25,4 +26,10 @@ export const ERC20_READ_ABI = [
   { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ name: "owner", type: "address" }], outputs: [{ type: "uint256" }] },
   { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
   { type: "function", name: "symbol", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
+] as const;
+
+export const MAIN_AGGREGATOR_ABI = [
+  { type: "function", name: "getVerificationCount", stateMutability: "view", inputs: [{ name: "user", type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "isVerifiedHuman", stateMutability: "view", inputs: [{ name: "_address", type: "address" }], outputs: [{ type: "bool" }] },
+  { type: "function", name: "getTrustScore", stateMutability: "view", inputs: [{ name: "_address", type: "address" }], outputs: [{ type: "uint256" }] },
 ] as const;

@@ -4,7 +4,7 @@ import React, { useMemo, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
-import { useOutsideClick } from "~~/hooks/scaffold-eth";
+import { useOutsideClick, useVerificationStatus } from "~~/hooks/scaffold-eth";
 import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth/RainbowKitCustomConnectButton";
 import { useAccount, useReadContract } from "wagmi";
 import { formatUnits } from "viem";
@@ -49,6 +49,7 @@ export const Header = () => {
   useOutsideClick(burgerMenuRef, () => burgerMenuRef?.current?.removeAttribute("open"));
 
   const { address } = useAccount();
+  const { count, isLoading } = useVerificationStatus();
 
   const { data: tokenBalanceRaw } = useReadContract({
     abi: ERC20_READ_ABI,
@@ -85,6 +86,12 @@ export const Header = () => {
         </ul>
       </div>
       <div className="navbar-end grow mr-4">
+        {address && !isLoading && (
+          <div className="flex items-center mr-3">
+            <div className="badge badge-primary mr-2">My Verifications</div>
+            <div className="font-mono text-sm font-bold">{count}/4</div>
+          </div>
+        )}
         {HMT_ADDRESS ? (
           <div className="flex items-center mr-3">
             <div className="badge badge-outline mr-2">{HMT_SYMBOL}</div>

@@ -18,6 +18,7 @@ import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 import { Rocket } from "~~/src/assets/images";
 import { IDKitWidget, ISuccessResult } from "@worldcoin/idkit";
 import { decodeAbiParameters, encodeAbiParameters, parseAbiParameters } from "viem";
+import { useVerificationStatus } from "~~/hooks/scaffold-eth";
 
 type U256x8 = readonly [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
 
@@ -85,6 +86,7 @@ const Home: NextPage = () => {
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
   const { openConnectModal } = useConnectModal();
+  const { count: verificationCount } = useVerificationStatus();
   const [loadingWorld, setLoadingWorld] = React.useState(false);
   const [loadingGitcoin, setLoadingGitcoin] = React.useState(false);
   const [loadingPoh, setLoadingPoh] = React.useState(false);
@@ -382,6 +384,13 @@ const Home: NextPage = () => {
         <div className={styles.container}>
           <h2 className={styles.h2Center}>Verification Sources</h2>
           <p className={styles.leadCenter}>Select one or more providers to verify your humanity. Each verification awards 1 trust score token.</p>
+          {address && (
+            <div style={{ textAlign: 'center', marginTop: '16px' }}>
+              <div className="badge badge-lg badge-primary">
+                Your Verifications: {verificationCount}/4
+              </div>
+            </div>
+          )}
           <Row gutter={[20, 20]} justify="center" style={{ marginTop: '32px' }}>
             <Col xs={24} sm={12} md={12} lg={6}>
               <Card className={styles.valueCard}>

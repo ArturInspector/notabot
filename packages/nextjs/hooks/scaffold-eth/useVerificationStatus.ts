@@ -1,55 +1,56 @@
-import { useAccount, useReadContract } from "wagmi";
+import { useAccount, useReadContracts } from "wagmi";
 import { MAIN_AGGREGATOR_ADDRESS, MAIN_AGGREGATOR_ABI } from "~~/utils/contracts";
+import { useScaffoldWatchContractEvent } from "./useScaffoldWatchContractEvent";
 
-/**
- * Custom hook to read user's verification status from MainAggregator contract
- * Returns:
- * - count: number of verifications (0-4)
- * - isVerified: boolean if user has at least 1 verification
- * - trustScore: number based on ERC-20 balance
- * - isLoading: loading state
- */
 export const useVerificationStatus = () => {
   const { address } = useAccount();
 
-  const { data: count, isLoading: isLoadingCount } = useReadContract({
-    abi: MAIN_AGGREGATOR_ABI,
-    address: MAIN_AGGREGATOR_ADDRESS,
-    functionName: "getVerificationCount",
-    args: address ? [address] : undefined,
-    query: { 
+  const { data, isLoading, refetch } = useReadContracts({
+    contracts: [
+      {
+        abi: MAIN_AGGREGATOR_ABI,
+        address: MAIN_AGGREGATOR_ADDRESS,
+        functionName: "getVerificationCount",
+        args: address ? [address] : undefined,
+      },
+      {
+        abi: MAIN_AGGREGATOR_ABI,
+        address: MAIN_AGGREGATOR_ADDRESS,
+        functionName: "isVerifiedHuman",
+        args: address ? [address] : undefined,
+      },
+      {
+        abi: MAIN_AGGREGATOR_ABI,
+        address: MAIN_AGGREGATOR_ADDRESS,
+        functionName: "getTrustScore",
+        args: address ? [address] : undefined,
+      },
+    ],
+    query: {
       enabled: Boolean(address && MAIN_AGGREGATOR_ADDRESS),
-      refetchInterval: 5000, // Refresh every 5 seconds
+      refetchInterval: 30000,
     },
   });
 
-  const { data: isVerified, isLoading: isLoadingVerified } = useReadContract({
-    abi: MAIN_AGGREGATOR_ABI,
-    address: MAIN_AGGREGATOR_ADDRESS,
-    functionName: "isVerifiedHuman",
-    args: address ? [address] : undefined,
-    query: { 
-      enabled: Boolean(address && MAIN_AGGREGATOR_ADDRESS),
-      refetchInterval: 5000,
+  useScaffoldWatchContractEvent({
+    contractName: "MainAggregator",
+    eventName: "VerificationRegistered",
+    onLogs: (logs) => {
+      if (logs.some((log) => log.args.user === address)) {
+        refetch();
+      }
     },
   });
 
-  const { data: trustScore, isLoading: isLoadingScore } = useReadContract({
-    abi: MAIN_AGGREGATOR_ABI,
-    address: MAIN_AGGREGATOR_ADDRESS,
-    functionName: "getTrustScore",
-    args: address ? [address] : undefined,
-    query: { 
-      enabled: Boolean(address && MAIN_AGGREGATOR_ADDRESS),
-      refetchInterval: 5000,
-    },
-  });
+  const count = data?.[0]?.result ? Number(data[0].result) : 0;
+  const isVerified = data?.[1]?.result ? Boolean(data[1].result) : false;
+  const trustScore = data?.[2]?.result ? Number(data[2].result) : 0;
 
   return {
-    count: count ? Number(count) : 0,
-    isVerified: Boolean(isVerified),
-    trustScore: trustScore ? Number(trustScore) : 0,
-    isLoading: isLoadingCount || isLoadingVerified || isLoadingScore,
+    count,
+    isVerified,
+    trustScore,
+    isLoading,
   };
 };
 

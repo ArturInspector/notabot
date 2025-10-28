@@ -1,4 +1,31 @@
 # NotABot Architecture
+**Universal Multi-Chain Proof-of-Humanity Protocol**
+
+---
+
+## 🌐 Multi-Chain Vision
+
+NotABot is the **first chain-agnostic identity verification protocol**.  
+Verify once → Use everywhere (EVM chains + Solana + future: Aptos, Sui, etc.)
+
+### Supported Networks
+
+| Blockchain | Status | Network | Details |
+|------------|--------|---------|---------|
+| **Base L2** | ✅ Deployed | Sepolia Testnet | Primary EVM deployment |
+| **Status Network** | ✅ Deployed | Testnet | Alternative EVM chain |
+| **Solana** | 🆕 NEW | Devnet (deploying) | Non-EVM expansion |
+| Ethereum | 🔜 Roadmap | Mainnet | Post-audit |
+| Optimism | 🔜 Roadmap | Mainnet | Q2 2025 |
+| Arbitrum | 🔜 Roadmap | Mainnet | Q2 2025 |
+
+**Why Multi-Chain?**
+- Different ecosystems, different users
+- Solana = best for gaming (speed + cost)
+- EVM = best for DeFi (liquidity + maturity)
+- Users choose, we support all
+
+---
 
 ## System Overview
 
@@ -62,6 +89,87 @@ graph TB
     style POHA fill:#FF6B9D,stroke:#FF4A7D,color:#fff
     style BIA fill:#FDB32A,stroke:#FFA500,color:#fff
 ```
+
+---
+
+## Multi-Chain Architecture (NEW!)
+
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        UI[Next.js Frontend]
+        CS[Chain Selector]
+        EVM_WALLET[EVM Wallets<br/>MetaMask, Rainbow]
+        SOL_WALLET[Solana Wallets<br/>Phantom, Solflare]
+        
+        UI --> CS
+        CS --> EVM_WALLET
+        CS --> SOL_WALLET
+    end
+    
+    subgraph "Backend Layer - Chain Agnostic"
+        API[Express API Server]
+        GITCOIN_SVC[Gitcoin Service]
+        BRIGHTID_SVC[BrightID Service]
+        POH_SVC[PoH Service]
+        
+        EVM_SIGNER[EVM Signer<br/>ECDSA]
+        SOL_SIGNER[Solana Signer<br/>Ed25519]
+        
+        API --> GITCOIN_SVC
+        API --> BRIGHTID_SVC
+        API --> POH_SVC
+        API --> EVM_SIGNER
+        API --> SOL_SIGNER
+    end
+    
+    subgraph "Blockchain Layer - EVM Chains"
+        BASE[Base L2 Contracts]
+        STATUS[Status Network Contracts]
+        ETH[Ethereum Mainnet<br/>Coming Soon]
+        
+        MAIN_EVM[MainAggregator.sol]
+        ADAPTERS_EVM[4x Adapters]
+        TOKEN_EVM[VerificationToken]
+        
+        BASE --> MAIN_EVM
+        STATUS --> MAIN_EVM
+        MAIN_EVM --> ADAPTERS_EVM
+        MAIN_EVM --> TOKEN_EVM
+    end
+    
+    subgraph "Blockchain Layer - Solana"
+        SOL_DEV[Solana Devnet]
+        SOL_MAIN[Solana Mainnet<br/>Coming Soon]
+        
+        PROGRAM[notabot Program]
+        PDA[User Verification PDAs]
+        
+        SOL_DEV --> PROGRAM
+        PROGRAM --> PDA
+    end
+    
+    EVM_WALLET --> BASE
+    EVM_WALLET --> STATUS
+    SOL_WALLET --> SOL_DEV
+    
+    EVM_SIGNER --> MAIN_EVM
+    SOL_SIGNER --> PROGRAM
+    
+    style UI fill:#60a5fa,stroke:#3b82f6,color:#fff
+    style API fill:#34d399,stroke:#10b981,color:#000
+    style MAIN_EVM fill:#7b61ff,stroke:#5f47f6,color:#fff
+    style PROGRAM fill:#9945FF,stroke:#14F195,color:#fff
+    style SOL_DEV fill:#14F195,stroke:#9945FF,color:#000
+```
+
+**Key Design Principles:**
+- ✅ **Backend is Chain-Agnostic**: Same verification logic for all chains
+- ✅ **Frontend Supports All Wallets**: Users choose their preferred chain
+- ✅ **Smart Contracts Are Chain-Specific**: Optimized for each platform
+- ✅ **Cross-Chain Deduplication**: Backend prevents same identity across chains
+
+---
 
 ## Verification Flow
 
@@ -265,4 +373,81 @@ mindmap
 - Same security (rollup to Ethereum)
 - Built-in bridging with Superchain
 - Native support for OP Stack
+
+---
+
+## 🌟 Solana Integration (NEW!)
+
+**Solana Devnet Deployment (In Progress)**
+
+### Why Solana?
+
+**The Sybil Problem Paradox:**
+- Solana transactions cost ~$0.00025 (400x cheaper than Base L2)
+- Creating 10,000 fake wallets costs ~$2.50 vs $20,000 on Ethereum
+- **Result:** Best UX + Worst Sybil problem = WE'RE NEEDED MOST HERE
+
+
+### Solana Program Architecture
+
+```
+Program: notabot.so
+├── Instructions:
+│   ├── initialize_verification(user: Pubkey)
+│   ├── verify_user(source: String, unique_id: String)
+│   ├── is_verified(user: Pubkey) -> bool
+│   └── get_trust_score(user: Pubkey) -> u64
+│
+├── Accounts:
+│   ├── UserVerification PDA (per user)
+│   │   ├── user: Pubkey
+│   │   ├── is_verified: bool
+│   │   ├── source: String
+│   │   ├── trust_score: u64
+│   │   └── timestamp: i64
+│   │
+│   └── OracleAuthority (global)
+│       └── authorized_signers: Vec<Pubkey>
+│
+└── Security:
+    ├── PDA-based authority (not msg.sender)
+    ├── Backend Ed25519 signatures
+    └── Cross-chain deduplication (via backend DB)
+```
+
+### Deployment Plan
+
+**Phase 1: Hackathon (Now)**
+- ✅ Architecture designed
+- 🚧 Rust program implementation
+- 🚧 Anchor tests
+- ⏳ Devnet deployment
+- ⏳ Frontend integration
+
+**Phase 2: Testnet (Post-Hackathon)**
+- Security audit (OtterSec or Neodyme)
+- Load testing (10k+ verifications)
+- Beta program (invite Solana GameFi projects)
+
+**Phase 3: Mainnet (Month 3)**
+- Production deployment
+- Multi-sig authority (3-of-5)
+- Insurance coverage (Nexus Mutual)
+- Monitoring & alerting
+
+### Documentation
+
+For detailed Solana architecture:
+📖 **[packages/solana/ARCHITECTURE.md](./packages/solana/ARCHITECTURE.md)**
+---
+### Technical Excellence
+
+**What Makes Us Different:**
+1. ✅ **First Multi-Chain PoH Aggregator** (pioneer advantage)
+2. ✅ **Chain-Agnostic Backend** (easy to add new chains)
+3. ✅ **Universal Interface** (same API for all chains)
+4. ✅ **Already Proven** (ETH Bishkek 2025 winners 🏆)
+
+---
+
 

@@ -4,16 +4,39 @@
 
 ### "Stripe for Web3 Identity"
 https://mainhntrepo-nextjs-uurk.vercel.app/
-One-stop proof-of-humanity aggregator. Verify once, access anywhere.
+
+**Universal Multi-Chain Proof-of-Humanity Protocol**  
+Verify once on ANY chain → Access everywhere
 
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-363636?logo=solidity)](https://soliditylang.org)
+[![Rust](https://img.shields.io/badge/Rust-Anchor-orange?logo=rust)](https://www.rust-lang.org)
 [![Base L2](https://img.shields.io/badge/Network-Base%20Sepolia-0052FF)](https://base.org)
+[![Solana](https://img.shields.io/badge/Network-Solana%20Devnet-9945FF)](https://solana.com)
 [![Status Network](https://img.shields.io/badge/Network-Status%20Testnet-5B6CD9)](https://status.network)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-[🏗️ Architecture](./ARCHITECTURE_DIAGRAM.md) • [📡 API Docs](./packages/backend/API.md) • [🔐 Contracts](./contracts/ARCHITECTURE.MD)
+**🏆 ETH Bishkek 2024 Winners** | Now Expanding to Solana
+
+[🏗️ Architecture](./ARCHITECTURE_DIAGRAM.md) • [📡 API Docs](./packages/backend/API.md) • [⚡ Solana Docs](./packages/solana/ARCHITECTURE.md)
 
 </div>
+
+---
+
+## 🌐 Multi-Chain Expansion
+
+**We won ETH Bishkek with Base L2 deployment. Now we're going everywhere.**
+
+| Blockchain | Status | Why It Matters |
+|------------|--------|----------------|
+| **Base L2** | ✅ Deployed | EVM DeFi ecosystem |
+| **Status Network** | ✅ Deployed | Privacy-focused L2 |
+| **Solana** | 🚧 Deploying | GameFi + 65k TPS |
+| Ethereum | 🔜 Q2 2025 | Maximum security |
+| Optimism | 🔜 Q2 2025 | Superchain bridge |
+| Arbitrum | 🔜 Q2 2025 | Largest L2 |
+
+**Vision:** Become THE identity layer for ALL of Web3, not just one chain.
 
 ---
 
@@ -21,11 +44,18 @@ One-stop proof-of-humanity aggregator. Verify once, access anywhere.
 
 Airdrops are getting destroyed by bots. 60-90% of participants aren't real humans. Arbitrum lost $50M+ in 2023 alone.
 
+**Solana's Problem is WORSE:**
+- Transactions cost $0.00025 (vs $2+ on Ethereum)
+- Creating 10,000 fake wallets = $2.50 total
+- Every Solana airdrop gets farmed to death
+- GameFi projects can't prevent multi-accounting
+
 Existing solutions are fragmented:
 - Worldcoin requires physical orb access
 - Gitcoin Passport needs manual stamp collection  
 - Proof of Humanity has high friction
 - Every project integrates these separately (2-4 weeks each)
+- **NONE work across multiple chains**
 
 ## Our Solution
 

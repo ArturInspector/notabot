@@ -1,0 +1,20 @@
+[package]
+name = "notabot"
+version = "0.1.0"
+description = "NotABot - Universal Proof-of-Humanity Protocol for Solana"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "notabot"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.29.0"
+

@@ -17,7 +17,7 @@
 е
 **Program ID:** `notabot.so` (deployed on Devnet/Mainnet-Beta)
 
-```packages/solana/
+```solana/
 │
 ├── programs/                        # 🔴 ON-CHAIN CODE (Rust)
 │   └── notabot/

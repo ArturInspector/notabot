@@ -6,6 +6,7 @@ import { gitcoinService } from './services/gitcoin.js';
 import { pohService } from './services/poh.js';
 import { brightidService } from './services/brightid.js';
 import { signerService } from './services/signer.js';
+import { solanaService } from './services/solana.js';
 import { validateAddress, sanitizeError } from './middleware/validators.js';
 import { logger } from './utils/logger.js';
 
@@ -305,6 +306,85 @@ app.post('/api/demo/verify', validateAddress, async (req, res) => {
   });
 });
 
+app.post('/api/solana/verify', async (req, res) => {
+  const { userPublicKey, source, uniqueId } = req.body;
+  
+  try {
+    if (!userPublicKey || !source || !uniqueId) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        code: 'INVALID_REQUEST',
+        required: ['userPublicKey', 'source', 'uniqueId']
+      });
+    }
+
+    logger.info('Solana verification request', { userPublicKey, source });
+
+    const existingData = await solanaService.getVerificationData(userPublicKey);
+    if (existingData && existingData.isVerified) {
+      logger.info('User already verified on Solana', { userPublicKey });
+      return res.json({
+        success: true,
+        alreadyVerified: true,
+        data: existingData
+      });
+    }
+
+    const result = await solanaService.verifyUser(userPublicKey, source, uniqueId);
+
+    logger.info('Solana verification success', { 
+      userPublicKey, 
+      signature: result.signature 
+    });
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    logger.error('Solana verification failed', { 
+      userPublicKey: req.body.userPublicKey, 
+      error: error.message 
+    });
+
+    const sanitized = sanitizeError(error);
+    res.status(500).json(sanitized);
+  }
+});
+
+app.get('/api/solana/check/:userPublicKey', async (req, res) => {
+  const { userPublicKey } = req.params;
+  
+  try {
+    logger.info('Solana check verification', { userPublicKey });
+
+    const data = await solanaService.getVerificationData(userPublicKey);
+    
+    if (!data) {
+      return res.status(404).json({
+        success: false,
+        error: 'Verification not found',
+        code: 'NOT_FOUND'
+      });
+    }
+
+    res.json({
+      success: true,
+      data
+    });
+
+  } catch (error) {
+    logger.error('Solana check failed', { 
+      userPublicKey, 
+      error: error.message 
+    });
+
+    const sanitized = sanitizeError(error);
+    res.status(500).json(sanitized);
+  }
+});
+
 app.post('/api/binance/verify', validateAddress, async (req, res) => {
   const { userAddress } = req.body;
   
@@ -322,12 +402,15 @@ app.post('/api/binance/verify', validateAddress, async (req, res) => {
 
 app.listen(config.PORT, () => {
   logger.info(`Server running on port ${config.PORT}`);
-  logger.info(`Oracle Address: ${signerService.getAddress()}`);
+  logger.info(`EVM Oracle Address: ${signerService.getAddress()}`);
+  logger.info(`Solana Oracle Address: ${solanaService.getOraclePublicKey()}`);
   logger.info('Endpoints:');
   console.log('  GET  /health');
   console.log('  POST /api/gitcoin/verify');
   console.log('  POST /api/poh/verify');
   console.log('  POST /api/brightid/verify');
+  console.log('  POST /api/solana/verify');
+  console.log('  GET  /api/solana/check/:userPublicKey');
   if (config.DEMO_MODE) {
     console.log('  POST /api/demo/verify (DEMO MODE ENABLED)');
   }

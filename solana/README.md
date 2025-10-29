@@ -70,4 +70,3 @@ console.log('Trust Score:', verification.trustScore);
 - **ORACLE_AUTHORITY**: Backend Ed25519 keypair (update in `verify_user.rs`)
 - **PDA Security**: Only program can modify verification data
 - **Compute Budget**: <200k CU per instruction
-

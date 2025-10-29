@@ -25,6 +25,9 @@ export const config = {
   
   BACKEND_PRIVATE_KEY: process.env.BACKEND_PRIVATE_KEY,
   
+  SOLANA_RPC_URL: process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com',
+  SOLANA_ORACLE_PRIVATE_KEY: process.env.SOLANA_ORACLE_PRIVATE_KEY,
+  
   GITCOIN_API_KEY: process.env.GITCOIN_API_KEY,
   GITCOIN_SCORER_ID: process.env.GITCOIN_SCORER_ID,
   GITCOIN_MIN_SCORE: parseInt(process.env.GITCOIN_MIN_SCORE || '20', 10),

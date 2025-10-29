@@ -1,11 +1,6 @@
-[toolchain]
-
 [features]
-resolution = true
+seeds = false
 skip-lint = false
-
-[programs.devnet]
-notabot = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 
 [programs.localnet]
 notabot = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
@@ -14,15 +9,9 @@ notabot = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
+cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
-
-[workspace]
-members = ["programs/*"]
-
-[[test]]
-path = "tests/*.ts"
 

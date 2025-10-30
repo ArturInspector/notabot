@@ -4,7 +4,7 @@ import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import bs58 from 'bs58';
 
-const PROGRAM_ID = new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS');
+const PROGRAM_ID = new PublicKey(config.SOLANA_PROGRAM_ID);
 
 class SolanaService {
   constructor() {

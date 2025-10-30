@@ -7,10 +7,8 @@ pub enum NotABotError {
     
     #[msg("Invalid verification proof")]
     InvalidProof,
-    
     #[msg("Authority not authorized to verify users")]
     Unauthorized,
-    
     #[msg("User not verified")]
     NotVerified,
     

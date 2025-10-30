@@ -16,6 +16,7 @@ import { Header } from "~~/components/Header";
 import { BlockieAvatar } from "~~/components/scaffold-eth";
 import { useInitializeNativeCurrencyPrice } from "~~/hooks/scaffold-eth";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
+import { SolanaProvider } from "~~/src/providers/SolanaProvider";
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   useInitializeNativeCurrencyPrice();
@@ -56,15 +57,17 @@ export const ScaffoldEthAppWithProviders = ({
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider
-          avatar={BlockieAvatar}
-          theme={
-            mounted ? (isDarkMode ? darkTheme() : lightTheme()) : lightTheme()
-          }
-        >
-          <ProgressBar height="3px" color="#2299dd" />
-          <ScaffoldEthApp>{children}</ScaffoldEthApp>
-        </RainbowKitProvider>
+        <SolanaProvider>
+          <RainbowKitProvider
+            avatar={BlockieAvatar}
+            theme={
+              mounted ? (isDarkMode ? darkTheme() : lightTheme()) : lightTheme()
+            }
+          >
+            <ProgressBar height="3px" color="#2299dd" />
+            <ScaffoldEthApp>{children}</ScaffoldEthApp>
+          </RainbowKitProvider>
+        </SolanaProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );

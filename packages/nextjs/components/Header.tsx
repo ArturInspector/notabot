@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
-import { useOutsideClick, useVerificationStatus } from "~~/hooks/scaffold-eth";
+import { Bars3Icon } from "@heroicons/react/24/outline";
+import { useOutsideClick } from "~~/hooks/scaffold-eth";
 import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth/RainbowKitCustomConnectButton";
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useAccount, useReadContract } from "wagmi";
 import { formatUnits } from "viem";
 import { ERC20_READ_ABI, HMT_ADDRESS, HMT_DECIMALS, HMT_SYMBOL } from "../utils/contracts";
@@ -18,7 +20,6 @@ type HeaderMenuLink = {
 
 export const menuLinks: HeaderMenuLink[] = [
   { label: "Home", href: "/" },
-  { label: "Debug Contracts", href: "/debug", icon: <BugAntIcon className="h-4 w-4" /> },
 ];
 
 export const HeaderMenuLinks = () => {
@@ -47,9 +48,11 @@ export const HeaderMenuLinks = () => {
 export const Header = () => {
   const burgerMenuRef = useRef<HTMLDetailsElement>(null);
   useOutsideClick(burgerMenuRef, () => burgerMenuRef?.current?.removeAttribute("open"));
+  
+  const [activeChain, setActiveChain] = useState<'ethereum' | 'solana'>('ethereum');
 
   const { address } = useAccount();
-  const { count, isLoading } = useVerificationStatus();
+  const { connected: solanaConnected } = useWallet();
 
   const { data: tokenBalanceRaw } = useReadContract({
     abi: ERC20_READ_ABI,
@@ -78,27 +81,42 @@ export const Header = () => {
         <Link href="/" passHref className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0">
           <div className="flex flex-col">
             <span className="font-bold leading-tight">NotABot</span>
-            <span className="text-xs">Ethereum dev stack</span>
+            <span className="text-xs opacity-70">One source, More blockchain</span>
           </div>
         </Link>
         <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">
           <HeaderMenuLinks />
         </ul>
       </div>
-      <div className="navbar-end grow mr-4">
-        {address && !isLoading && (
-          <div className="flex items-center mr-3">
-            <div className="badge badge-primary mr-2">My Verifications</div>
-            <div className="font-mono text-sm font-bold">{count}/4</div>
-          </div>
+      <div className="navbar-end grow mr-4 gap-3">
+        <div className="join join-horizontal">
+          <button 
+            className={`join-item btn btn-sm ${activeChain === 'ethereum' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setActiveChain('ethereum')}
+          >
+            ETH
+          </button>
+          <button 
+            className={`join-item btn btn-sm ${activeChain === 'solana' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setActiveChain('solana')}
+          >
+            SOL
+          </button>
+        </div>
+
+        {activeChain === 'ethereum' ? (
+          <>
+            {HMT_ADDRESS ? (
+              <div className="flex items-center">
+                <div className="badge badge-outline mr-2">{HMT_SYMBOL}</div>
+                <div className="font-mono text-sm">{tokenBalance}</div>
+              </div>
+            ) : null}
+            <RainbowKitCustomConnectButton />
+          </>
+        ) : (
+          <WalletMultiButton style={{ height: '40px' }} />
         )}
-        {HMT_ADDRESS ? (
-          <div className="flex items-center mr-3">
-            <div className="badge badge-outline mr-2">{HMT_SYMBOL}</div>
-            <div className="font-mono text-sm">{tokenBalance}</div>
-          </div>
-        ) : null}
-        <RainbowKitCustomConnectButton />
       </div>
     </div>
   );

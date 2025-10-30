@@ -26,6 +26,7 @@ export const config = {
   BACKEND_PRIVATE_KEY: process.env.BACKEND_PRIVATE_KEY,
   
   SOLANA_RPC_URL: process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com',
+  SOLANA_PROGRAM_ID: process.env.SOLANA_PROGRAM_ID || 'B2SGdLXWxVssPDBHB8WwKwhwdP9CLWDvBfXr1EtYZtye',
   SOLANA_ORACLE_PRIVATE_KEY: process.env.SOLANA_ORACLE_PRIVATE_KEY,
   
   GITCOIN_API_KEY: process.env.GITCOIN_API_KEY,

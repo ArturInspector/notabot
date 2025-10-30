@@ -11,9 +11,9 @@ pub struct InitializeVerification<'info> {
         space = UserVerification::SPACE
     )]
     pub verification: Account<'info, UserVerification>,
-    pub user: AccountInfo<'info>,
+    pub user: SystemAccount<'info>,
     #[account(mut)]
-    pub payer: Signer<'info>, // yep
+    pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 

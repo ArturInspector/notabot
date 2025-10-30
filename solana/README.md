@@ -1,112 +1,72 @@
 # NotABot Solana Program
 
-**Universal Proof-of-Humanity Protocol on Solana**
+Universal Proof-of-Humanity Protocol - Solana Integration
 
 ## Quick Start
 
 ### Prerequisites
-- Rust 1.70+
-- Solana CLI 1.17+
-- Anchor 0.29+
-- Node.js 20+
-
-### Installation
-
 ```bash
-# Install Solana CLI
-sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
-
-# Install Anchor
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-avm install latest
-avm use latest
-
-# Install dependencies
-cd packages/solana
-npm install
+avm install 0.29.0
+avm use 0.29.0
+solana-keygen new
 ```
 
-### Build
-
+### Build & Test
 ```bash
 anchor build
-```
-
-### Test
-
-```bash
 anchor test
 ```
 
-### Deploy
-
+### Deploy to Devnet
 ```bash
-# Devnet
 anchor deploy --provider.cluster devnet
-
-# Testnet
-anchor deploy --provider.cluster testnet
-
-# Mainnet (after audit!)
-anchor deploy --provider.cluster mainnet-beta
 ```
 
----
+## Program Structure
 
-## Program Instructions
+```
+programs/notabot/src/
+├── lib.rs                      # Entry point
+├── instructions/
+│   ├── initialize_verification.rs  # Create PDA for user
+│   ├── verify_user.rs              # Oracle writes verification
+│   ├── is_verified.rs              # Read verification status
+│   └── get_trust_score.rs          # Read trust score
+├── state/
+│   └── user_verification.rs        # Account structure
+└── errors.rs                       # Custom errors
+```
 
-### `initialize_verification`
-Create verification PDA for new user.
+## Instructions
 
-### `verify_user` 
-Record verification (oracle only).
+### 1. Initialize Verification
+Creates PDA for user (one-time, ~0.002 SOL rent)
 
-### `is_verified`
-Check if user is verified (read-only).
+### 2. Verify User
+Backend oracle calls with proof from Gitcoin/BrightID
 
-### `get_trust_score`
-Get user's aggregate trust score.
-
----
+### 3. Check Verification
+Anyone can read verification status (permissionless)
 
 ## Integration Example
 
 ```typescript
 import { Program, AnchorProvider } from '@coral-xyz/anchor';
-import { PublicKey } from '@solana/web3.js';
 
-const program = new Program(IDL, programId, provider);
-
-// Check if user is verified
 const [verificationPDA] = PublicKey.findProgramAddressSync(
   [Buffer.from('verification'), userPubkey.toBuffer()],
   programId
 );
 
 const verification = await program.account.userVerification.fetch(verificationPDA);
-console.log('Is verified:', verification.isVerified);
+console.log('Verified:', verification.isVerified);
+console.log('Trust Score:', verification.trustScore);
 ```
 
----
+## Security
 
-## Documentation
-
-- [Architecture](./ARCHITECTURE.md) - Full technical design
-- [API Reference](./docs/API.md) - Instruction details
-- [Integration Guide](../../docs/INTEGRATION.md) - How to integrate
-
----
-
-## Status
-
-- ✅ Architecture designed
-- 🚧 Program implementation (in progress)
-- 🚧 Tests
-- ⏳ Devnet deployment
-- ⏳ Audit
-
----
-
-**Part of NotABot Protocol**  
-Multi-chain identity verification for Web3
-
+- **ORACLE_AUTHORITY**: Backend Ed25519 keypair (update in `verify_user.rs`)
+- **PDA Security**: Only program can modify verification data
+- **Compute Budget**: <200k CU per instruction

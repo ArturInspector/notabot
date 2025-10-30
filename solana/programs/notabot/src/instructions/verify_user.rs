@@ -12,7 +12,6 @@ pub struct VerifyUser<'info> {
         bump = verification.bump
     )]
     pub verification: Account<'info, UserVerification>,
-    
     #[account(constraint = authority.key() == ORACLE_AUTHORITY @ NotABotError::Unauthorized)]
     pub authority: Signer<'info>,
     pub user: AccountInfo<'info>,
@@ -26,7 +25,6 @@ pub fn handler(
     require!(unique_id.len() <= UserVerification::MAX_UNIQUE_ID_LEN, NotABotError::UniqueIdTooLong);
     let verification = &mut ctx.accounts.verification;
     let clock = Clock::get()?;
-    
     verification.is_verified = true;
     verification.source = source;
     verification.unique_id = unique_id;
@@ -35,4 +33,3 @@ pub fn handler(
     msg!("user verified: {}, source: {}", verification.user, verification.source);
     Ok(())
 }
-

@@ -12,7 +12,10 @@
     "test-gitcoin": "node scripts/testGitcoin.js"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "^0.29.0",
+    "@solana/web3.js": "^1.95.0",
     "axios": "^1.6.2",
+    "bs58": "^5.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "ethers": "^6.9.0",

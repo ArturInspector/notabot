@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { usePublicClient, useBlockNumber } from "wagmi";
 import { MAIN_AGGREGATOR_ADDRESS } from "~~/utils/contracts";
-import { Address, Log, decodeEventLog } from "viem";
+import { Address, Log, decodeEventLog, isAddress } from "viem";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 
 export type EventType = 
@@ -106,7 +106,11 @@ export const useLiveEvents = (fromBlock?: bigint, limit: number = 100) => {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchEvents = useCallback(async () => {
-    if (!publicClient || !MAIN_AGGREGATOR_ADDRESS) return;
+    if (!publicClient || !MAIN_AGGREGATOR_ADDRESS || !isAddress(MAIN_AGGREGATOR_ADDRESS)) {
+      setIsLoading(false);
+      setError(new Error("MainAggregator address is not configured. Please set NEXT_PUBLIC_MAIN_AGGREGATOR environment variable."));
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -238,7 +242,7 @@ export const useLiveEvents = (fromBlock?: bigint, limit: number = 100) => {
 
   // Подписка на новые блоки
   useEffect(() => {
-    if (!publicClient || !currentBlock) return;
+    if (!publicClient || !currentBlock || !MAIN_AGGREGATOR_ADDRESS || !isAddress(MAIN_AGGREGATOR_ADDRESS)) return;
 
     const unwatch = publicClient.watchBlockNumber({
       onBlockNumber: async (blockNumber) => {

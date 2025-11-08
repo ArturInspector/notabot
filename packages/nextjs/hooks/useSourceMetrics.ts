@@ -1,6 +1,7 @@
 import { useReadContracts } from "wagmi";
 import { MAIN_AGGREGATOR_ADDRESS, MAIN_AGGREGATOR_ABI } from "~~/utils/contracts";
 import { useMemo } from "react";
+import { isAddress } from "viem";
 
 export interface SourceMetric {
   sourceId: number;
@@ -39,7 +40,7 @@ export const useSourceMetrics = () => {
   const { data, isLoading, error } = useReadContracts({
     contracts,
     query: {
-      enabled: Boolean(MAIN_AGGREGATOR_ADDRESS),
+      enabled: Boolean(MAIN_AGGREGATOR_ADDRESS && isAddress(MAIN_AGGREGATOR_ADDRESS)),
       refetchInterval: 30000,
     },
   });

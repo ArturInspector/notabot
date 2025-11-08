@@ -1,6 +1,7 @@
 import { useAccount, useReadContracts } from "wagmi";
 import { MAIN_AGGREGATOR_ADDRESS, MAIN_AGGREGATOR_ABI } from "~~/utils/contracts";
 import { useScaffoldWatchContractEvent } from "./useScaffoldWatchContractEvent";
+import { isAddress } from "viem";
 
 export const useVerificationStatus = () => {
   const { address } = useAccount();
@@ -27,7 +28,7 @@ export const useVerificationStatus = () => {
       },
     ],
     query: {
-      enabled: Boolean(address && MAIN_AGGREGATOR_ADDRESS),
+      enabled: Boolean(address && MAIN_AGGREGATOR_ADDRESS && isAddress(MAIN_AGGREGATOR_ADDRESS)),
       refetchInterval: 30000,
     },
   });

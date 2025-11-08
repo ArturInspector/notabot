@@ -26,6 +26,7 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
     error UnauthorizedAdapter();
     error DuplicateVerification();
     error InvalidAddress();
+    error SourceMismatch(uint8 expected, uint8 provided);
     
     event VerificationRegistered(
         address indexed user,
@@ -53,6 +54,9 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
         bytes calldata /* proof */
     ) external nonReentrant whenNotPaused {
         if (!isAdapter[msg.sender]) revert UnauthorizedAdapter();
+        uint8 expectedSource = adapterToSource[msg.sender];
+        if (source != expectedSource) revert SourceMismatch(expectedSource, source);
+        
         if (user == address(0)) revert InvalidAddress();
         if (usedUniqueIds[uniqueId]) revert DuplicateVerification();
         usedUniqueIds[uniqueId] = true;
@@ -92,18 +96,22 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
     function isVerifiedHuman(address _address) external view returns (bool) {
         return userVerifications[_address].length > 0;
     }
-    
-    // trust score based on ERC-20 balance
+
     function getTrustScore(address _address) external view returns (uint256) {
         return verificationToken.balanceOf(_address) / (1 * 10**18);
     }
     
-    // get verification count for user
     function getVerificationCount(address user) external view returns (uint256) {
         return userVerifications[user].length;
     }
+    function getVerificationByIndex(address user, uint256 index) external view returns (VerificationData memory) {
+        require(index < userVerifications[user].length, "Index out of bounds");
+        return userVerifications[user][index];
+    }
+    function getAllVerifications(address user) external view returns (VerificationData[] memory) {
+        return userVerifications[user];
+    }
     
-    // withdraw tokens if needed (emergency or redistribution)
     function withdrawTokens(uint256 amount) external onlyOwner nonReentrant {
         require(
             verificationToken.transfer(owner(), amount),

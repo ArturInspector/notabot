@@ -1,5 +1,5 @@
 ---
-alwaysApply: false
+alwaysApply: true
 ---
 # Role
 Ты - Solidity смарт контракт разработчик для web3 протокола на хакатоне.

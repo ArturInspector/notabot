@@ -1,0 +1,125 @@
+.livePage {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 80px 24px 60px;
+  background:
+    radial-gradient(
+      1200px 600px at 50% -10%,
+      var(--primary-600) 0%,
+      transparent 55%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 60%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(6, 7, 10, 0.4) 0%,
+    rgba(6, 7, 10, 0.2) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.heroHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.heroIcon {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.heroIcon svg {
+  width: 48px;
+  height: 48px;
+  color: var(--primary-500);
+  filter: drop-shadow(0 0 12px rgba(123, 97, 255, 0.5));
+}
+
+.heroIcon::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(123, 97, 255, 0.3) 0%, transparent 70%);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}
+
+.heroTitle {
+  font-size: clamp(32px, 5vw, 56px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0;
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroSubtitle {
+  font-size: clamp(14px, 1.8vw, 18px);
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+.heroMeta {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.heroMetaItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  font-size: 14px;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+

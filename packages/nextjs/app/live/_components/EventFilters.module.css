@@ -1,0 +1,104 @@
+.filterContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filterHeader {
+  flex-shrink: 0;
+}
+
+.filterTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: var(--text) !important;
+}
+
+.filterDescription {
+  font-size: 14px;
+  color: var(--muted) !important;
+  margin: 0;
+}
+
+.filterSegmented {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.filterSegmented::-webkit-scrollbar {
+  height: 6px;
+}
+
+.filterSegmented::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.filterSegmented::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.filterSegmented::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.segmented {
+  min-width: fit-content;
+  width: 100%;
+}
+
+.glassCard {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.segmented :global(.ant-segmented-group) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.segmented :global(.ant-segmented-item) {
+  flex: 1 1 auto;
+  min-width: fit-content;
+  white-space: nowrap;
+}
+
+.segmented :global(.ant-segmented-item-label) {
+  color: var(--muted) !important;
+}
+
+.segmented :global(.ant-segmented-item-selected .ant-segmented-item-label) {
+  color: var(--text) !important;
+}
+
+/* На мобильных делаем горизонтальную прокрутку */
+@media (max-width: 768px) {
+  .filterSegmented {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  
+  .segmented {
+    min-width: max-content;
+  }
+  
+  .segmented :global(.ant-segmented-group) {
+    flex-wrap: nowrap;
+    min-width: max-content;
+  }
+  
+  .segmented :global(.ant-segmented-item) {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}

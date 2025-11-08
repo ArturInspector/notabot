@@ -69,14 +69,12 @@ describe("MainAggregator", function () {
   });
 
   describe("getTrustScore", function () {
-    it("should return correct score", async function () {
-      const proof = await mockGitcoinProof(oracle, user.address);
+    it("should return probability-based score", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address, 75);
       await gitcoinAdapter.verifyAndRegister(user.address, proof);
 
-      const TOKEN_REWARD = await aggregator.TOKEN_REWARD();
       const score = await aggregator.getTrustScore(user.address);
-
-      expect(score).to.equal((await token.balanceOf(user.address)) / TOKEN_REWARD);
+      expect(score).to.be.gt(0);
     });
   });
 
@@ -153,6 +151,148 @@ describe("MainAggregator", function () {
       const verifications = await aggregator.getAllVerifications(user.address);
       expect(verifications.length).to.equal(1);
       expect(verifications[0].source).to.equal(1);
+    });
+  });
+
+  describe("Bayesian Probability Model", function () {
+    it("should return 0 for user without verifications", async function () {
+      const probability = await aggregator.getHumanProbability(user.address);
+      expect(probability).to.equal(0);
+    });
+
+    it("should calculate probability for single Gitcoin verification", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address, 75);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+
+      const probability = await aggregator.getHumanProbability(user.address);
+      expect(probability).to.be.gt(0);
+      expect(probability).to.be.lt(ethers.parseEther("1"));
+    });
+
+    it("should increase probability with multiple sources", async function () {
+      const gitcoinProof = await mockGitcoinProof(oracle, user.address, 80);
+      await gitcoinAdapter.verifyAndRegister(user.address, gitcoinProof);
+
+      const prob1 = await aggregator.getHumanProbability(user.address);
+
+      const { pohAdapter, brightidAdapter } = await deployAll();
+      const pohProof = await mockPoHProof(oracle, user.address);
+      await pohAdapter.verifyAndRegister(user.address, pohProof);
+
+      const prob2 = await aggregator.getHumanProbability(user.address);
+      expect(prob2).to.be.gt(prob1);
+    });
+
+    it("should adjust Gitcoin probability based on score", async function () {
+      const lowScoreProof = await mockGitcoinProof(oracle, user.address, 25);
+      await gitcoinAdapter.verifyAndRegister(user.address, lowScoreProof);
+      const lowProb = await aggregator.getHumanProbability(user.address);
+
+      const highScoreProof = await mockGitcoinProof(oracle, user2.address, 95);
+      await gitcoinAdapter.verifyAndRegister(user2.address, highScoreProof);
+      const highProb = await aggregator.getHumanProbability(user2.address);
+
+      expect(highProb).to.be.gt(lowProb);
+    });
+  });
+
+  describe("Anomaly Detection", function () {
+    it("should detect too many recent verifications", async function () {
+      const { pohAdapter, brightidAdapter } = await deployAll();
+      
+      for (let i = 0; i < 3; i++) {
+        const gitcoinProof = await mockGitcoinProof(oracle, user.address, 50 + i);
+        await gitcoinAdapter.verifyAndRegister(user.address, gitcoinProof);
+      }
+      
+      for (let i = 0; i < 3; i++) {
+        const pohProof = await mockPoHProof(oracle, user.address);
+        await pohAdapter.verifyAndRegister(user.address, pohProof);
+      }
+
+      const isAnomaly = await aggregator.detectAnomaly(user.address);
+      expect(isAnomaly).to.be.true;
+    });
+
+    it("should detect all low-quality Gitcoin scores", async function () {
+      for (let i = 0; i < 3; i++) {
+        const userId = ethers.keccak256(ethers.toUtf8Bytes(`user-${i}-${Date.now()}`));
+        const timestamp = Math.floor(Date.now() / 1000);
+        const score = 20 + i;
+        
+        const messageHash = ethers.solidityPackedKeccak256(
+          ['address', 'bytes32', 'uint256', 'uint256'],
+          [user.address, userId, score, timestamp]
+        );
+        const signature = await oracle.signMessage(ethers.getBytes(messageHash));
+        
+        const proof = ethers.AbiCoder.defaultAbiCoder().encode(
+          ['bytes32', 'uint256', 'uint256', 'bytes'],
+          [userId, score, timestamp, signature]
+        );
+        
+        await gitcoinAdapter.verifyAndRegister(user.address, proof);
+      }
+
+      const isAnomaly = await aggregator.detectAnomaly(user.address);
+      expect(isAnomaly).to.be.true;
+    });
+
+    it("should not detect anomaly for normal user", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address, 75);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+
+      const isAnomaly = await aggregator.detectAnomaly(user.address);
+      expect(isAnomaly).to.be.false;
+    });
+  });
+
+  describe("Attack Confirmation and Confidence Updates", function () {
+    it("should update source stats on attack confirmation", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address, 75);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+
+      const statsBefore = await aggregator.sourceStats(1);
+      await aggregator.confirmAttack(user.address, 1);
+      const statsAfter = await aggregator.sourceStats(1);
+
+      expect(statsAfter.confirmedAttacks).to.equal(statsBefore.confirmedAttacks + 1n);
+    });
+
+    it("should update confidence score after attack", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address, 75);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+
+      const confBefore = await aggregator.sourceConfidences(1);
+      await aggregator.confirmAttack(user.address, 1);
+      const confAfter = await aggregator.sourceConfidences(1);
+
+      expect(confAfter.denominator).to.be.gt(confBefore.denominator);
+    });
+
+    it("should revert if user doesn't have source verification", async function () {
+      await expect(
+        aggregator.confirmAttack(user.address, 1)
+      ).to.be.revertedWithCustomError(aggregator, "InvalidAddress");
+    });
+  });
+
+  describe("Source Confidence Management", function () {
+    it("should allow owner to set source confidence", async function () {
+      await aggregator.setSourceConfidence(0, 9000, 9100);
+      const conf = await aggregator.sourceConfidences(0);
+      expect(conf.numerator).to.equal(9000);
+      expect(conf.denominator).to.equal(9100);
+    });
+
+    it("should revert on invalid confidence values", async function () {
+      await expect(
+        aggregator.setSourceConfidence(0, 10000, 9000)
+      ).to.be.revertedWithCustomError(aggregator, "InvalidConfidence");
+
+      await expect(
+        aggregator.setSourceConfidence(0, 1000, 0)
+      ).to.be.revertedWithCustomError(aggregator, "InvalidConfidence");
     });
   });
 });

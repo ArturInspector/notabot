@@ -4288,6 +4288,7 @@ __metadata:
     "@tanstack/react-query": ~5.59.15
     "@types/node": ~18.19.50
     "@types/react": ~19.0.7
+    "@types/react-katex": ^3
     "@uniswap/sdk-core": ~5.8.2
     "@uniswap/v2-sdk": ~4.6.1
     "@worldcoin/idkit": ^2.4.2
@@ -4300,6 +4301,7 @@ __metadata:
     burner-connector: 0.0.18
     daisyui: 5.0.9
     framer-motion: ^12.4.7
+    katex: ^0.16.25
     kubo-rpc-client: ~5.0.2
     next: ~15.2.3
     next-nprogress-bar: ~2.3.13
@@ -4309,6 +4311,7 @@ __metadata:
     react: ~19.0.0
     react-dom: ~19.0.0
     react-hot-toast: ~2.4.0
+    react-katex: ^3.1.0
     tailwindcss: 4.1.3
     type-fest: ~4.26.1
     typescript: ~5.8.2
@@ -6927,6 +6930,24 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 7a10d298a9987dc4f0cdfdc5171dabafaf0945cc97e5daa6b609e726a57aa4a48ae0e966c68379ef390d61d3cd6621b9b04214bb16b42f5486a46349e1db254d
+  languageName: node
+  linkType: hard
+
+"@types/react-katex@npm:^3":
+  version: 3.0.4
+  resolution: "@types/react-katex@npm:3.0.4"
+  dependencies:
+    "@types/react": "*"
+  checksum: 2c5b0fc9e04f050beffdb9b8a19edeb7049c6227b3631620b4e3908e59624a3ee57bc0f5bab93123b2d3344224c099bdb54b92ead12e046200f0d1d1d1decc86
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:*":
+  version: 19.2.2
+  resolution: "@types/react@npm:19.2.2"
+  dependencies:
+    csstype: ^3.0.2
+  checksum: 7eb2d316dd5a6c02acb416524b50bae932c38d055d26e0f561ca23c009c686d16a2b22fcbb941eecbe2ecb167f119e29b9d0142d9d056dd381352c43413b60da
   languageName: node
   linkType: hard
 
@@ -9995,7 +10016,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"commander@npm:^8.1.0":
+"commander@npm:^8.1.0, commander@npm:^8.3.0":
   version: 8.3.0
   resolution: "commander@npm:8.3.0"
   checksum: 0f82321821fc27b83bd409510bb9deeebcfa799ff0bf5d102128b500b7af22872c0c92cb6a0ebc5a4cf19c6b550fba9cedfa7329d18c6442a625f851377bacf0
@@ -14070,6 +14091,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"katex@npm:^0.16.0, katex@npm:^0.16.25":
+  version: 0.16.25
+  resolution: "katex@npm:0.16.25"
+  dependencies:
+    commander: ^8.3.0
+  bin:
+    katex: cli.js
+  checksum: 6c73ffd33018c42656bf220889e30738f84a1e00a0e22300ffbabd559880bb3dad33fd3b5e5fcf62addd79c1b31f7c75fcfa6cc8684de6175ce5e30248cff607
+  languageName: node
+  linkType: hard
+
 "keccak@npm:^3.0.0, keccak@npm:^3.0.2, keccak@npm:^3.0.3":
   version: 3.0.4
   resolution: "keccak@npm:3.0.4"
@@ -17725,6 +17757,18 @@ __metadata:
   version: 18.3.1
   resolution: "react-is@npm:18.3.1"
   checksum: e20fe84c86ff172fc8d898251b7cc2c43645d108bf96d0b8edf39b98f9a2cae97b40520ee7ed8ee0085ccc94736c4886294456033304151c3f94978cec03df21
+  languageName: node
+  linkType: hard
+
+"react-katex@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "react-katex@npm:3.1.0"
+  dependencies:
+    katex: ^0.16.0
+  peerDependencies:
+    prop-types: ^15.8.1
+    react: ">=15.3.2 <20"
+  checksum: 1fc7e5396eacafd41de43ec581774b4c8ab281c1155231ef33ac73ef900657450f126fb95d4d2e245e04d0f668b1c87c3db2f0bf6fde981b23d28e103feba6b2
   languageName: node
   linkType: hard
 

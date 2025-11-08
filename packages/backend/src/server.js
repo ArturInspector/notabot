@@ -15,10 +15,33 @@ const app = express();
 
 app.set('trust proxy', 1);
 
-app.use(cors({
-  origin: config.ALLOWED_ORIGINS,
-  credentials: true
-}));
+// CORS configuration with Vercel support
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    // Check exact matches from ALLOWED_ORIGINS
+    if (config.ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow all Vercel preview deployments (*.vercel.app)
+    if (origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+
+    // Reject other origins
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: config.MAX_PAYLOAD_SIZE }));
 

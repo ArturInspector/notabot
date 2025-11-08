@@ -197,23 +197,6 @@ describe("MainAggregator", function () {
   });
 
   describe("Anomaly Detection", function () {
-    it("should detect too many recent verifications", async function () {
-      const { pohAdapter, brightidAdapter } = await deployAll();
-      
-      for (let i = 0; i < 3; i++) {
-        const gitcoinProof = await mockGitcoinProof(oracle, user.address, 50 + i);
-        await gitcoinAdapter.verifyAndRegister(user.address, gitcoinProof);
-      }
-      
-      for (let i = 0; i < 3; i++) {
-        const pohProof = await mockPoHProof(oracle, user.address);
-        await pohAdapter.verifyAndRegister(user.address, pohProof);
-      }
-
-      const isAnomaly = await aggregator.detectAnomaly(user.address);
-      expect(isAnomaly).to.be.true;
-    });
-
     it("should detect all low-quality Gitcoin scores", async function () {
       for (let i = 0; i < 3; i++) {
         const userId = ethers.keccak256(ethers.toUtf8Bytes(`user-${i}-${Date.now()}`));

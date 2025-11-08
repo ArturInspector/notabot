@@ -271,21 +271,15 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
         VerificationData[] memory verifications = userVerifications[user];
         if (verifications.length == 0) return false;
         
-        uint256 recentCount = 0;
         uint256 lowScoreCount = 0;
-        uint256 oneDayAgo = block.timestamp - 1 days;
         
         for (uint i = 0; i < verifications.length; i++) {
-            if (verifications[i].timestamp > oneDayAgo) {
-                recentCount++;
-            }
-            
             if (verifications[i].source == 1 && verifications[i].qualityScore < 30) {
                 lowScoreCount++;
             }
         }
         
-        if (recentCount > 5) return true;
+        // Подозрительно: все верификации от Gitcoin имеют низкий qualityScore
         if (lowScoreCount == verifications.length && verifications.length > 2) return true;
         
         return false;

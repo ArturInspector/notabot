@@ -7,7 +7,7 @@ import { LiveEvent } from "~~/hooks/useLiveEvents";
 import { formatAddress, formatUniqueId, formatTimestamp, getExplorerUrl, SOURCE_NAMES, SOURCE_COLORS, EVENT_TYPE_LABELS } from "~~/utils/liveUtils";
 import { Address } from "~~/components/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
-import { ExternalLinkIcon, CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon, PlusIcon, MinusIcon } from "@heroicons/react/24/outline";
+import { ArrowTopRightOnSquareIcon, CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon, PlusIcon, MinusIcon } from "@heroicons/react/24/outline";
 import styles from "./LiveEventFeed.module.css";
 
 interface LiveEventFeedProps {
@@ -189,7 +189,7 @@ export const LiveEventFeed: React.FC<LiveEventFeedProps> = ({ events, isLoading,
                   className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors"
                 >
                   <span className="text-xs">View</span>
-                  <ExternalLinkIcon className="w-4 h-4" />
+                  <ArrowTopRightOnSquareIcon className="w-4 h-4" />
                 </a>
               </div>
             </Card>

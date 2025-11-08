@@ -26,3 +26,7 @@ MAIN_IDEA.MD
 .env*
 API.md
 solana-implement.mdc
+
+package-lock.json
+package.json
+xstrategy/

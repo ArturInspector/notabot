@@ -98,4 +98,61 @@ describe("MainAggregator", function () {
       );
     });
   });
+
+  describe("SourceMismatch protection", function () {
+    it("should revert if adapter tries to use wrong source", async function () {
+      const MockAdapter = await ethers.getContractFactory("MockAdapter");
+      const mockAdapter = await MockAdapter.deploy(await aggregator.getAddress());
+      await mockAdapter.waitForDeployment();
+      await aggregator.addAdapter(await mockAdapter.getAddress(), 1);
+      
+      const userId = ethers.randomBytes(32);
+      await expect(
+        mockAdapter.callRegisterVerification(user.address, 0, userId, "0x")
+      ).to.be.revertedWithCustomError(aggregator, "SourceMismatch");
+    });
+
+    it("should accept correct source from adapter", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+      
+      const verifications = await aggregator.getAllVerifications(user.address);
+      expect(verifications.length).to.equal(1);
+      expect(verifications[0].source).to.equal(1); // Gitcoin = 1
+    });
+  });
+
+  describe("getVerificationByIndex", function () {
+    it("should return verification at specific index", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+
+      const verification = await aggregator.getVerificationByIndex(user.address, 0);
+      expect(verification.source).to.equal(1); // Gitcoin
+      expect(verification.timestamp).to.be.gt(0);
+      expect(verification.uniqueId).to.not.equal(ethers.ZeroHash);
+    });
+
+    it("should revert if index out of bounds", async function () {
+      await expect(
+        aggregator.getVerificationByIndex(user.address, 0)
+      ).to.be.revertedWith("Index out of bounds");
+    });
+  });
+
+  describe("getAllVerifications", function () {
+    it("should return empty array for user without verifications", async function () {
+      const verifications = await aggregator.getAllVerifications(user.address);
+      expect(verifications.length).to.equal(0);
+    });
+
+    it("should return all verifications for user", async function () {
+      const proof1 = await mockGitcoinProof(oracle, user.address);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof1);
+
+      const verifications = await aggregator.getAllVerifications(user.address);
+      expect(verifications.length).to.equal(1);
+      expect(verifications[0].source).to.equal(1);
+    });
+  });
 });

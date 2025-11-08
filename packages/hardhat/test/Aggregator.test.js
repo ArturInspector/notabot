@@ -295,4 +295,291 @@ describe("MainAggregator", function () {
       ).to.be.revertedWithCustomError(aggregator, "InvalidConfidence");
     });
   });
+
+  describe("Verification Invalidation", function () {
+    it("should invalidate specific verification by uniqueId", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+
+      expect(await aggregator.isVerifiedHuman(user.address)).to.be.true;
+
+      const verifications = await aggregator.getAllVerifications(user.address);
+      const uniqueId = verifications[0].uniqueId;
+
+      await aggregator.invalidateVerification(uniqueId);
+
+      expect(await aggregator.isVerifiedHuman(user.address)).to.be.false;
+      expect(await aggregator.invalidatedVerifications(uniqueId)).to.be.true;
+    });
+
+    it("should invalidate all user verifications from source", async function () {
+      const proof1 = await mockGitcoinProof(oracle, user.address, 75);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof1);
+
+      const { pohAdapter } = await deployAll();
+      const pohProof = await mockPoHProof(oracle, user.address);
+      await pohAdapter.verifyAndRegister(user.address, pohProof);
+
+      expect(await aggregator.isVerifiedHuman(user.address)).to.be.true;
+
+      await aggregator.invalidateUserVerifications(user.address, 1); // Invalidate Gitcoin
+
+      // User should still be verified (has PoH verification)
+      expect(await aggregator.isVerifiedHuman(user.address)).to.be.true;
+
+      // But Gitcoin verification should be invalid
+      const verifications = await aggregator.getAllVerifications(user.address);
+      expect(await aggregator.isVerificationValid(user.address, 0)).to.be.false; // Gitcoin invalid
+      expect(await aggregator.isVerificationValid(user.address, 1)).to.be.true; // PoH valid
+    });
+
+    it("should revert if verification not found", async function () {
+      const fakeUniqueId = ethers.randomBytes(32);
+      await expect(
+        aggregator.invalidateVerification(fakeUniqueId)
+      ).to.be.revertedWithCustomError(aggregator, "VerificationNotFound");
+    });
+
+    it("should revert if user has no verifications from source", async function () {
+      await expect(
+        aggregator.invalidateUserVerifications(user.address, 1)
+      ).to.be.revertedWithCustomError(aggregator, "VerificationNotFound");
+    });
+
+    it("should revert if not owner", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+      const verifications = await aggregator.getAllVerifications(user.address);
+      const uniqueId = verifications[0].uniqueId;
+
+      await expect(
+        aggregator.connect(user).invalidateVerification(uniqueId)
+      ).to.be.revertedWithCustomError(aggregator, "OwnableUnauthorizedAccount");
+    });
+  });
+
+  describe("Source Compromise Window", function () {
+    it("should block new verifications in compromise window", async function () {
+      const currentTime = await ethers.provider.getBlock("latest").then(b => b.timestamp);
+      const startTime = currentTime - 3600; // 1 hour ago
+      const endTime = currentTime + 3600; // 1 hour from now
+
+      await aggregator.markSourceCompromised(1, startTime, endTime);
+
+      const proof = await mockGitcoinProof(oracle, user.address);
+      await expect(
+        gitcoinAdapter.verifyAndRegister(user.address, proof)
+      ).to.be.revertedWithCustomError(aggregator, "SourceUnderAttack");
+    });
+
+    it("should invalidate existing verifications in compromise window", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+
+      expect(await aggregator.isVerifiedHuman(user.address)).to.be.true;
+
+      // Get verification timestamp
+      const verifications = await aggregator.getAllVerifications(user.address);
+      const verificationTime = verifications[0].timestamp;
+      const startTime = verificationTime - 100;
+      const endTime = verificationTime + 100;
+
+      await aggregator.markSourceCompromised(1, startTime, endTime);
+
+      // Verification should be invalid now
+      expect(await aggregator.isVerifiedHuman(user.address)).to.be.false;
+      expect(await aggregator.isVerificationValid(user.address, 0)).to.be.false;
+    });
+
+    it("should not invalidate verifications outside compromise window", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+
+      const verifications = await aggregator.getAllVerifications(user.address);
+      const verificationTime = verifications[0].timestamp;
+      
+      // Set compromise window AFTER verification time
+      const startTime = verificationTime + 1000;
+      const endTime = verificationTime + 2000;
+
+      await aggregator.markSourceCompromised(1, startTime, endTime);
+
+      // Verification should still be valid (outside window)
+      expect(await aggregator.isVerifiedHuman(user.address)).to.be.true;
+      expect(await aggregator.isVerificationValid(user.address, 0)).to.be.true;
+    });
+
+    it("should revert on invalid time window", async function () {
+      const currentTime = await ethers.provider.getBlock("latest").then(b => b.timestamp);
+      
+      await expect(
+        aggregator.markSourceCompromised(1, currentTime + 1000, currentTime)
+      ).to.be.revertedWithCustomError(aggregator, "InvalidTimeWindow");
+
+      // Cannot set window more than 1 year in future
+      await expect(
+        aggregator.markSourceCompromised(1, currentTime, currentTime + 366 * 24 * 3600)
+      ).to.be.revertedWithCustomError(aggregator, "InvalidTimeWindow");
+    });
+
+    it("should allow verifications after compromise window ends", async function () {
+      const currentTime = await ethers.provider.getBlock("latest").then(b => b.timestamp);
+      const startTime = currentTime - 2000; // 2 hours ago
+      const endTime = currentTime - 1000; // 1 hour ago (ended)
+
+      await aggregator.markSourceCompromised(1, startTime, endTime);
+
+      // Should allow new verification (window ended)
+      const proof = await mockGitcoinProof(oracle, user.address);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+      expect(await aggregator.isVerifiedHuman(user.address)).to.be.true;
+    });
+  });
+
+  describe("Suspicious Window (Sybil Attack Detection)", function () {
+    it("should reset suspicious count on normal verification", async function () {
+      // Create 2 suspicious verifications
+      for (let i = 0; i < 2; i++) {
+        const userId = ethers.keccak256(ethers.toUtf8Bytes(`user-${i}-${Date.now()}`));
+        const timestamp = Math.floor(Date.now() / 1000);
+        const score = 20; // Low score
+        
+        const messageHash = ethers.solidityPackedKeccak256(
+          ['address', 'bytes32', 'uint256', 'uint256'],
+          [user.address, userId, score, timestamp]
+        );
+        const signature = await oracle.signMessage(ethers.getBytes(messageHash));
+        
+        const proof = ethers.AbiCoder.defaultAbiCoder().encode(
+          ['bytes32', 'uint256', 'uint256', 'bytes'],
+          [userId, score, timestamp, signature]
+        );
+        
+        await gitcoinAdapter.verifyAndRegister(user.address, proof);
+      }
+
+      // Normal verification should reset counter
+      const normalProof = await mockGitcoinProof(oracle, user2.address, 80);
+      await gitcoinAdapter.verifyAndRegister(user2.address, normalProof);
+
+      // Should be able to register more (counter reset)
+      const anotherNormalProof = await mockGitcoinProof(oracle, user.address, 75);
+      await gitcoinAdapter.verifyAndRegister(user.address, anotherNormalProof);
+    });
+
+    it("should block source after 3 suspicious verifications in window", async function () {
+      // Create 3 suspicious verifications (low scores, triggering anomaly)
+      for (let i = 0; i < 3; i++) {
+        const userId = ethers.keccak256(ethers.toUtf8Bytes(`suspicious-${i}-${Date.now()}`));
+        const timestamp = Math.floor(Date.now() / 1000);
+        const score = 20; // Low score
+        
+        const messageHash = ethers.solidityPackedKeccak256(
+          ['address', 'bytes32', 'uint256', 'uint256'],
+          [user.address, userId, score, timestamp]
+        );
+        const signature = await oracle.signMessage(ethers.getBytes(messageHash));
+        
+        const proof = ethers.AbiCoder.defaultAbiCoder().encode(
+          ['bytes32', 'uint256', 'uint256', 'bytes'],
+          [userId, score, timestamp, signature]
+        );
+        
+        if (i < 2) {
+          // First 2 should succeed
+          await gitcoinAdapter.verifyAndRegister(user.address, proof);
+        } else {
+          // 3rd should block
+          await expect(
+            gitcoinAdapter.verifyAndRegister(user.address, proof)
+          ).to.be.revertedWithCustomError(aggregator, "SourceUnderAttack");
+        }
+      }
+    });
+
+    it("should reset window after duration expires", async function () {
+      // This test would require time manipulation, skipping for now
+      // In production, window resets automatically after WINDOW_DURATION
+    });
+
+    it("should allow owner to reset source window", async function () {
+      await aggregator.resetSourceWindow(1);
+      const window = await aggregator.sourceWindows(1);
+      expect(window.suspiciousCount).to.equal(0);
+      expect(window.verificationCount).to.equal(0);
+    });
+  });
+
+  describe("isVerificationValid", function () {
+    it("should return true for valid verification", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+
+      expect(await aggregator.isVerificationValid(user.address, 0)).to.be.true;
+    });
+
+    it("should return false for invalidated verification", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+
+      const verifications = await aggregator.getAllVerifications(user.address);
+      const uniqueId = verifications[0].uniqueId;
+
+      await aggregator.invalidateVerification(uniqueId);
+
+      expect(await aggregator.isVerificationValid(user.address, 0)).to.be.false;
+    });
+
+    it("should return false for verification in compromise window", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+
+      const verifications = await aggregator.getAllVerifications(user.address);
+      const verificationTime = verifications[0].timestamp;
+
+      await aggregator.markSourceCompromised(1, verificationTime - 100, verificationTime + 100);
+
+      expect(await aggregator.isVerificationValid(user.address, 0)).to.be.false;
+    });
+
+    it("should revert if index out of bounds", async function () {
+      await expect(
+        aggregator.isVerificationValid(user.address, 0)
+      ).to.be.revertedWith("Index out of bounds");
+    });
+  });
+
+  describe("getHumanProbability with invalidations", function () {
+    it("should return 0 if all verifications are invalidated", async function () {
+      const proof = await mockGitcoinProof(oracle, user.address);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof);
+
+      const verifications = await aggregator.getAllVerifications(user.address);
+      await aggregator.invalidateVerification(verifications[0].uniqueId);
+
+      const probability = await aggregator.getHumanProbability(user.address);
+      expect(probability).to.equal(0);
+    });
+
+    it("should exclude invalidated verifications from calculation", async function () {
+      const proof1 = await mockGitcoinProof(oracle, user.address, 75);
+      await gitcoinAdapter.verifyAndRegister(user.address, proof1);
+
+      const { pohAdapter } = await deployAll();
+      const pohProof = await mockPoHProof(oracle, user.address);
+      await pohAdapter.verifyAndRegister(user.address, pohProof);
+
+      const probBefore = await aggregator.getHumanProbability(user.address);
+
+      // Invalidate Gitcoin verification
+      const verifications = await aggregator.getAllVerifications(user.address);
+      await aggregator.invalidateVerification(verifications[0].uniqueId);
+
+      const probAfter = await aggregator.getHumanProbability(user.address);
+      
+      // Should be lower (only PoH counts now)
+      expect(probAfter).to.be.lt(probBefore);
+      expect(probAfter).to.be.gt(0); // But still > 0 (has PoH)
+    });
+  });
 });

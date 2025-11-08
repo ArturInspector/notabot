@@ -17,6 +17,8 @@ import {
 } from "antd";
 import { motion, type Variants, easeOut } from "framer-motion";
 import Link from "next/link";
+import { BlockMath, InlineMath } from "react-katex";
+import "katex/dist/katex.min.css";
 
 const { Sider, Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
@@ -37,6 +39,7 @@ const sections = [
   { key: "solidity", label: "Solidity Interface" },
   { key: "examples", label: "Usage Examples" },
   { key: "api", label: "API Reference" },
+  { key: "math", label: "Math & Security" },
   { key: "network", label: "Network & Gas" },
   { key: "support", label: "Support" },
 ];
@@ -333,6 +336,87 @@ contract YourContract is HumanityProtected {
                     </Card>
                   </Col>
                 </Row>
+              </motion.div>
+            </section>
+
+            <section id="math" className={styles.section}>
+              <motion.div variants={fadeUp}>
+                <Title level={2} className={styles.h2}>
+                  Math & Security
+                </Title>
+                
+                <Card className={styles.codeCard} style={{ marginBottom: 24 }}>
+                  <Title level={3} className={styles.h3}>
+                    Bayesian Aggregation
+                  </Title>
+                  <Paragraph className={styles.di1}>
+                    NotABot uses Bayes' theorem to combine probabilities from multiple independent verification sources. 
+                    Each source provides an independent estimate of the probability that a user is human.
+                  </Paragraph>
+                  <Divider className={styles.divider} />
+                  <Paragraph className={styles.dim} strong>Formula:</Paragraph>
+                  <BlockMath math="P(Human | E_1, E_2, ..., E_n) = 1 - \prod_{i=1}^{n}(1 - P_i)" />
+                  <Paragraph className={styles.di1} style={{ marginTop: 16 }}>
+                    Where <InlineMath math="P_i" /> is the confidence score from source <InlineMath math="i" />, 
+                    calculated as <InlineMath math="P_i = \frac{TPR_i}{TPR_i + FPR_i}" />.
+                  </Paragraph>
+                  <Paragraph className={styles.dim} style={{ marginTop: 16 }} strong>Example:</Paragraph>
+                  <Paragraph className={styles.di1}>
+                    If Worldcoin (99.9%), Gitcoin (90.9%), and PoH (79.5%) all verify a user:
+                  </Paragraph>
+                  <BlockMath math="P_{final} = 1 - (1-0.999)(1-0.909)(1-0.795) = 99.999\%" />
+                </Card>
+
+                <Card className={styles.codeCard} style={{ marginBottom: 24 }}>
+                  <Title level={3} className={styles.h3}>
+                    Attack Detection
+                  </Title>
+                  <Paragraph className={styles.di1}>
+                    The contract automatically detects suspicious patterns that may indicate Sybil attacks:
+                  </Paragraph>
+                  <ul style={{ marginTop: 12, paddingLeft: 24 }}>
+                    <li className={styles.di1}>
+                      <Text strong>Rapid verification bursts:</Text> More than 5 verifications in 24 hours
+                    </li>
+                    <li className={styles.di1}>
+                      <Text strong>Low quality scores:</Text> All verifications from Gitcoin with score &lt; 30
+                    </li>
+                    <li className={styles.di1}>
+                      <Text strong>Pattern analysis:</Text> Cross-source correlation detection
+                    </li>
+                  </ul>
+                  <Divider className={styles.divider} />
+                  <Paragraph className={styles.dim} strong>On-chain Events:</Paragraph>
+                  <pre className={styles.code}>
+                    <code>{`event AnomalyDetected(address indexed user, string reason);
+event AttackConfirmed(uint8 indexed sourceId, address indexed user);`}</code>
+                  </pre>
+                </Card>
+
+                <Card className={styles.codeCard}>
+                  <Title level={3} className={styles.h3}>
+                    Adaptive Confidence Updates
+                  </Title>
+                  <Paragraph className={styles.di1}>
+                    When an attack is confirmed, the system automatically updates the False Positive Rate (FPR) 
+                    for that source, which adjusts its confidence score:
+                  </Paragraph>
+                  <Divider className={styles.divider} />
+                  <Paragraph className={styles.dim} strong>Update Formula:</Paragraph>
+                  <BlockMath math="FPR_{new} = \frac{confirmedAttacks}{totalVerifications}" />
+                  <BlockMath math="confidence_{new} = \frac{TPR}{TPR + FPR_{new}}" />
+                  <Paragraph className={styles.di1} style={{ marginTop: 16 }}>
+                    This creates a self-improving system where sources with higher attack rates 
+                    automatically receive lower confidence scores, making the system more resilient over time.
+                  </Paragraph>
+                  <Divider className={styles.divider} />
+                  <Paragraph className={styles.dim} strong>Example:</Paragraph>
+                  <Paragraph className={styles.di1}>
+                    If a source has 1000 verifications and 10 confirmed attacks:
+                  </Paragraph>
+                  <BlockMath math="FPR = \frac{10}{1000} = 1\%" />
+                  <BlockMath math="confidence = \frac{0.95}{0.95 + 0.01} = 98.96\%" />
+                </Card>
               </motion.div>
             </section>
 

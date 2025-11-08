@@ -19,6 +19,8 @@ import { Rocket } from "~~/src/assets/images";
 import { IDKitWidget, ISuccessResult } from "@worldcoin/idkit";
 import { decodeAbiParameters, encodeAbiParameters, parseAbiParameters } from "viem";
 import { useVerificationStatus } from "~~/hooks/scaffold-eth";
+import { InlineMath, BlockMath } from "react-katex";
+import "katex/dist/katex.min.css";
 
 type U256x8 = readonly [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
 
@@ -702,6 +704,68 @@ const Home: NextPage = () => {
                 <Card className={styles.featureCard}>
                   <h3 className={`${styles.h3} ${styles.h3OnDark}`}>Interoperable</h3>
                   <p className={styles.text}>Works across chains and protocols via a standard interface.</p>
+                </Card>
+              </motion.div>
+            </Col>
+          </Row>
+        </div>
+      </section>
+
+      <section className={styles.sectionAlt} id="advanced">
+        <div className={styles.container}>
+          <h2 className={styles.h2Center}>Advanced Features</h2>
+          <p className={styles.leadCenter}>Mathematically sound sybil resistance with adaptive learning</p>
+          <Row gutter={[24, 24]} style={{ marginTop: '48px' }}>
+            <Col xs={24} md={8}>
+              <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} whileHover={{ y: -4, scale: 1.01 }} transition={{ type: "spring", stiffness: 220, damping: 18 }}>
+                <Card className={styles.featureCard}>
+                  <div style={{ fontSize: '32px', marginBottom: '16px' }}>📊</div>
+                  <h3 className={`${styles.h3} ${styles.h3OnDark}`}>Bayesian Aggregation</h3>
+                  <p className={styles.text}>
+                    Probability of "human" calculated from multiple independent sources using Bayes' theorem:
+                  </p>
+                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '8px', marginTop: '12px', fontSize: '14px' }}>
+                    <InlineMath math="P(H|E_1, E_2, ...) = 1 - \prod(1 - P_i)" />
+                  </div>
+                  <p className={styles.text} style={{ marginTop: '12px', fontSize: '13px', opacity: 0.8 }}>
+                    Each source contributes independently, increasing confidence exponentially.
+                  </p>
+                </Card>
+              </motion.div>
+            </Col>
+            <Col xs={24} md={8}>
+              <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} whileHover={{ y: -4, scale: 1.01 }} transition={{ type: "spring", stiffness: 220, damping: 18 }}>
+                <Card className={styles.featureCard}>
+                  <div style={{ fontSize: '32px', marginBottom: '16px' }}>🛡️</div>
+                  <h3 className={`${styles.h3} ${styles.h3OnDark}`}>Attack Detection</h3>
+                  <p className={styles.text}>
+                    Automatic detection of suspicious patterns:
+                  </p>
+                  <ul style={{ marginTop: '12px', paddingLeft: '20px', fontSize: '13px', opacity: 0.9 }}>
+                    <li>Rapid verification bursts</li>
+                    <li>Low quality score patterns</li>
+                    <li>Anomalous behavior detection</li>
+                  </ul>
+                  <p className={styles.text} style={{ marginTop: '12px', fontSize: '13px', opacity: 0.8 }}>
+                    Real-time monitoring with on-chain event emission.
+                  </p>
+                </Card>
+              </motion.div>
+            </Col>
+            <Col xs={24} md={8}>
+              <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} whileHover={{ y: -4, scale: 1.01 }} transition={{ type: "spring", stiffness: 220, damping: 18 }}>
+                <Card className={styles.featureCard}>
+                  <div style={{ fontSize: '32px', marginBottom: '16px' }}>🔄</div>
+                  <h3 className={`${styles.h3} ${styles.h3OnDark}`}>Adaptive Updates</h3>
+                  <p className={styles.text}>
+                    Source confidence scores update automatically when attacks are confirmed:
+                  </p>
+                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '8px', marginTop: '12px', fontSize: '14px' }}>
+                    <InlineMath math="FPR_{new} = \frac{attacks}{total}" />
+                  </div>
+                  <p className={styles.text} style={{ marginTop: '12px', fontSize: '13px', opacity: 0.8 }}>
+                    Self-improving system that learns from confirmed attacks.
+                  </p>
                 </Card>
               </motion.div>
             </Col>

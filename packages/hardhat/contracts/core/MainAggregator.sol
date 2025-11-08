@@ -14,9 +14,12 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
     mapping(address => uint8) public adapterToSource;
     mapping(address => VerificationData[]) public userVerifications;
     mapping(bytes32 => bool) public usedUniqueIds;
+    mapping(bytes32 => bool) public invalidatedVerifications;
     
     uint256 public constant TOKEN_REWARD = 1 * 1e18;
     uint256 private constant PROBABILITY_BASE = 1e18;
+    uint256 private constant SUSPICIOUS_THRESHOLD = 3; // 3 подозрительных подряд блокируют источник
+    uint256 private constant WINDOW_DURATION = 1 hours; // Окно подозрительности
     
     struct VerificationData {
         uint8 source;
@@ -36,8 +39,22 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
         uint256 lastUpdate;
     }
     
+    struct SourceWindow {
+        uint256 startTime;
+        uint256 verificationCount;
+        uint256 suspiciousCount;
+    }
+    
+    struct CompromiseWindow {
+        uint256 startTime;
+        uint256 endTime;
+        bool isCompromised;
+    }
+    
     mapping(uint8 => SourceConfidence) public sourceConfidences;
     mapping(uint8 => SourceStats) public sourceStats;
+    mapping(uint8 => SourceWindow) public sourceWindows;
+    mapping(uint8 => CompromiseWindow) public compromiseWindows;
 
     error UnauthorizedAdapter();
     error DuplicateVerification();
@@ -45,6 +62,9 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
     error SourceMismatch(uint8 expected, uint8 provided);
     error InvalidQualityScore();
     error InvalidConfidence();
+    error SourceUnderAttack(uint8 sourceId);
+    error InvalidTimeWindow();
+    error VerificationNotFound();
     
     event VerificationRegistered(
         address indexed user,
@@ -59,6 +79,10 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
     event AnomalyDetected(address indexed user, string reason);
     event ConfidenceUpdated(uint8 indexed sourceId, uint256 numerator, uint256 denominator);
     event AttackConfirmed(uint8 indexed sourceId, address indexed user);
+    event VerificationInvalidated(bytes32 indexed uniqueId);
+    event UserVerificationsInvalidated(address indexed user, uint8 indexed sourceId);
+    event SourceCompromised(uint8 indexed sourceId, uint256 startTime, uint256 endTime);
+    event SourceWindowReset(uint8 indexed sourceId);
     
     constructor(address _tokenAddr) Ownable(msg.sender) {
         if (_tokenAddr == address(0)) {
@@ -86,6 +110,14 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
         if (usedUniqueIds[uniqueId]) revert DuplicateVerification();
         usedUniqueIds[uniqueId] = true;
         
+        // Проверка на компрометацию источника в окне времени
+        CompromiseWindow memory compromiseWindow = compromiseWindows[source];
+        if (compromiseWindow.isCompromised && 
+            block.timestamp >= compromiseWindow.startTime && 
+            block.timestamp <= compromiseWindow.endTime) {
+            revert SourceUnderAttack(source);
+        }
+        
         uint256 qualityScore = 100;
         if (source == 1) {
             (, uint256 score, , ) = abi.decode(proof, (bytes32, uint256, uint256, bytes));
@@ -103,8 +135,36 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
         sourceStats[source].totalVerifications++;
         sourceStats[source].lastUpdate = block.timestamp;
         
-        if (detectAnomaly(user)) {
-            emit AnomalyDetected(user, "Suspicious pattern detected");
+        // Проверка на сибил-атаку в реальном времени
+        SourceWindow memory window = sourceWindows[source];
+        
+        // Если окно истекло или пустое (startTime = 0), создаем новое
+        if (window.startTime == 0 || block.timestamp > window.startTime + WINDOW_DURATION) {
+            sourceWindows[source] = SourceWindow({
+                startTime: block.timestamp,
+                verificationCount: 1,
+                suspiciousCount: 0
+            });
+            window = sourceWindows[source];
+        } else {
+            sourceWindows[source].verificationCount++;
+        }
+        
+        // Проверка на аномалию (только если окно активно)
+        if (window.startTime > 0 && block.timestamp <= window.startTime + WINDOW_DURATION) {
+            // Если детектирована аномалия, увеличиваем счетчик подозрительных
+            if (detectAnomaly(user)) {
+                sourceWindows[source].suspiciousCount++;
+                emit AnomalyDetected(user, "Suspicious pattern detected");
+                
+                // Если слишком много подозрительных подряд - блокируем источник временно
+                if (sourceWindows[source].suspiciousCount >= SUSPICIOUS_THRESHOLD) {
+                    revert SourceUnderAttack(source);
+                }
+            } else {
+                // Если нормальная верификация, сбрасываем счетчик подозрительных
+                sourceWindows[source].suspiciousCount = 0;
+            }
         }
 
         require(
@@ -132,7 +192,34 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
     }
     
     function isVerifiedHuman(address _address) external view returns (bool) {
-        return userVerifications[_address].length > 0;
+        VerificationData[] memory verifications = userVerifications[_address];
+        if (verifications.length == 0) return false;
+        
+        // Проверяем наличие хотя бы одной валидной верификации
+        for (uint i = 0; i < verifications.length; i++) {
+            if (isVerificationValid(_address, i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    function isVerificationValid(address user, uint256 index) public view returns (bool) {
+        require(index < userVerifications[user].length, "Index out of bounds");
+        VerificationData memory verification = userVerifications[user][index];
+        
+        // Проверка на инвалидацию
+        if (invalidatedVerifications[verification.uniqueId]) return false;
+        
+        // Проверка на компрометацию источника
+        CompromiseWindow memory window = compromiseWindows[verification.source];
+        if (window.isCompromised && 
+            verification.timestamp >= window.startTime && 
+            verification.timestamp <= window.endTime) {
+            return false;
+        }
+        
+        return true;
     }
     
     function getHumanProbability(address user) public view returns (uint256) {
@@ -140,8 +227,13 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
         if (verifications.length == 0) return 0;
         
         uint256 notHumanProb = PROBABILITY_BASE;
+        bool hasValidVerification = false;
         
         for (uint i = 0; i < verifications.length; i++) {
+            // Пропускаем инвалидированные верификации
+            if (!isVerificationValid(user, i)) continue;
+            
+            hasValidVerification = true;
             SourceConfidence memory conf = sourceConfidences[verifications[i].source];
             uint256 baseConfidence = (conf.numerator * PROBABILITY_BASE) / conf.denominator;
             
@@ -155,6 +247,7 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
             notHumanProb = (notHumanProb * notConfidence) / PROBABILITY_BASE;
         }
         
+        if (!hasValidVerification) return 0;
         return PROBABILITY_BASE - notHumanProb;
     }
 
@@ -215,7 +308,6 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
         sourceStats[sourceId].lastUpdate = block.timestamp;
         
         emit AttackConfirmed(sourceId, user);
-        
         updateSourceConfidence(sourceId);
     }
     function updateSourceConfidence(uint8 sourceId) public {
@@ -263,5 +355,53 @@ contract MainAggregator is IHumanityOracle, Ownable, ReentrancyGuard, Pausable {
         delete adapterToSource[adapter];
         
         emit AdapterRemoved(adapter);
+    }
+    
+    function invalidateVerification(bytes32 uniqueId) external onlyOwner {
+        if (!usedUniqueIds[uniqueId]) revert VerificationNotFound();
+        invalidatedVerifications[uniqueId] = true;
+        emit VerificationInvalidated(uniqueId);
+    }
+    
+    function invalidateUserVerifications(address user, uint8 sourceId) external onlyOwner {
+        if (user == address(0)) revert InvalidAddress();
+        VerificationData[] memory verifications = userVerifications[user];
+        bool found = false;
+        
+        for (uint i = 0; i < verifications.length; i++) {
+            if (verifications[i].source == sourceId) {
+                invalidatedVerifications[verifications[i].uniqueId] = true;
+                found = true;
+            }
+        }
+        
+        if (!found) revert VerificationNotFound();
+        emit UserVerificationsInvalidated(user, sourceId);
+    }
+    
+    function markSourceCompromised(
+        uint8 sourceId,
+        uint256 startTime,
+        uint256 endTime
+    ) external onlyOwner {
+        if (endTime <= startTime) revert InvalidTimeWindow();
+        if (endTime > block.timestamp + 365 days) revert InvalidTimeWindow(); // Защита: не более года вперед
+        
+        compromiseWindows[sourceId] = CompromiseWindow({
+            startTime: startTime,
+            endTime: endTime,
+            isCompromised: true
+        });
+        
+        emit SourceCompromised(sourceId, startTime, endTime);
+    }
+    
+    function resetSourceWindow(uint8 sourceId) external onlyOwner {
+        sourceWindows[sourceId] = SourceWindow({
+            startTime: block.timestamp,
+            verificationCount: 0,
+            suspiciousCount: 0
+        });
+        emit SourceWindowReset(sourceId);
     }
 }

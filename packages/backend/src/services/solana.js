@@ -1,5 +1,6 @@
 import { Connection, Keypair, PublicKey, Transaction, SystemProgram, TransactionInstruction } from '@solana/web3.js';
-import { BN, Program, AnchorProvider, web3 } from '@coral-xyz/anchor';
+import anchor from '@coral-xyz/anchor';
+const { BN, Program, AnchorProvider, web3 } = anchor;
 import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import bs58 from 'bs58';

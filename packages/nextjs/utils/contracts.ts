@@ -32,4 +32,26 @@ export const MAIN_AGGREGATOR_ABI = [
   { type: "function", name: "getVerificationCount", stateMutability: "view", inputs: [{ name: "user", type: "address" }], outputs: [{ type: "uint256" }] },
   { type: "function", name: "isVerifiedHuman", stateMutability: "view", inputs: [{ name: "_address", type: "address" }], outputs: [{ type: "bool" }] },
   { type: "function", name: "getTrustScore", stateMutability: "view", inputs: [{ name: "_address", type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "getHumanProbability", stateMutability: "view", inputs: [{ name: "user", type: "address" }], outputs: [{ type: "uint256" }] },
+  { 
+    type: "function", 
+    name: "sourceConfidences", 
+    stateMutability: "view", 
+    inputs: [{ name: "", type: "uint8" }], 
+    outputs: [
+      { name: "numerator", type: "uint256" }, 
+      { name: "denominator", type: "uint256" }
+    ] 
+  },
+  { 
+    type: "function", 
+    name: "sourceStats", 
+    stateMutability: "view", 
+    inputs: [{ name: "", type: "uint8" }], 
+    outputs: [
+      { name: "totalVerifications", type: "uint256" }, 
+      { name: "confirmedAttacks", type: "uint256" }, 
+      { name: "lastUpdate", type: "uint256" }
+    ] 
+  },
 ] as const;

@@ -1,6 +1,5 @@
 "use client";
 
-// @refresh reset
 import { Balance } from "../Balance";
 import { AddressInfoDropdown } from "./AddressInfoDropdown";
 import { AddressQRCodeModal } from "./AddressQRCodeModal";
@@ -12,9 +11,6 @@ import { useNetworkColor } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 import { getBlockExplorerAddressLink } from "~~/utils/scaffold-eth";
 
-/**
- * Custom Wagmi Connect Button (watch balance + custom design)
- */
 export const RainbowKitCustomConnectButton = () => {
   const networkColor = useNetworkColor();
   const { targetNetwork } = useTargetNetwork();
@@ -23,20 +19,14 @@ export const RainbowKitCustomConnectButton = () => {
     <ConnectButton.Custom>
       {({ account, chain, openConnectModal, mounted }) => {
         const connected = mounted && account && chain;
-        const blockExplorerAddressLink = account
-          ? getBlockExplorerAddressLink(targetNetwork, account.address)
-          : undefined;
+        const blockExplorerAddressLink = account ? getBlockExplorerAddressLink(targetNetwork, account.address) : undefined;
 
         return (
           <>
             {(() => {
               if (!connected) {
                 return (
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={openConnectModal}
-                    type="button"
-                  >
+                  <button className="btn btn-primary btn-sm rounded-full shadow-lg bg-gradient-to-r from-primary/90 to-primary text-primary-content border-0 hover:brightness-110 active:brightness-95" onClick={openConnectModal} type="button">
                     Connect Wallet
                   </button>
                 );
@@ -48,25 +38,18 @@ export const RainbowKitCustomConnectButton = () => {
 
               return (
                 <>
-                  <div className="flex flex-col items-center mr-1">
-                    <Balance
-                      address={account.address as Address}
-                      className="min-h-0 h-auto"
-                    />
-                    <span className="text-xs" style={{ color: networkColor }}>
-                      {chain.name}
-                    </span>
+                  <div className="flex items-center gap-2 mr-1">
+                    <div className="flex flex-col items-center justify-center -mr-1">
+                      <div className="rounded-xl bg-base-200/60 ring-1 ring-base-300/70 px-2 py-1 backdrop-blur-sm">
+                        <Balance address={account.address as Address} className="min-h-0 h-auto leading-none" />
+                      </div>
+                      <span className="text-[10px] mt-0.5 font-medium" style={{ color: networkColor }}>
+                        {chain.name}
+                      </span>
+                    </div>
+                    <AddressInfoDropdown address={account.address as Address} displayName={account.displayName} ensAvatar={account.ensAvatar} blockExplorerAddressLink={blockExplorerAddressLink} />
                   </div>
-                  <AddressInfoDropdown
-                    address={account.address as Address}
-                    displayName={account.displayName}
-                    ensAvatar={account.ensAvatar}
-                    blockExplorerAddressLink={blockExplorerAddressLink}
-                  />
-                  <AddressQRCodeModal
-                    address={account.address as Address}
-                    modalId="qrcode-modal"
-                  />
+                  <AddressQRCodeModal address={account.address as Address} modalId="qrcode-modal" />
                   <RevealBurnerPKModal />
                 </>
               );

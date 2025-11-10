@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { Bars3Icon } from "@heroicons/react/24/outline";
 import { useOutsideClick } from "~~/hooks/scaffold-eth";
 import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth/RainbowKitCustomConnectButton";
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { useAccount, useReadContract } from "wagmi";
 import { formatUnits } from "viem";
 import { ERC20_READ_ABI, HMT_ADDRESS, HMT_DECIMALS, HMT_SYMBOL } from "../utils/contracts";
@@ -35,14 +35,13 @@ export const HeaderMenuLinks = ({ mobile = false }: { mobile?: boolean }) => {
             <Link
               href={href}
               passHref
-              className={`${isActive ? "bg-secondary shadow-md" : ""} hover:bg-secondary hover:shadow-md focus:!bg-secondary active:!text-neutral ${
-                mobile 
-                  ? "py-2 px-4 text-sm rounded-lg gap-2 flex items-center" 
-                  : "py-1.5 px-3 text-sm rounded-full gap-2 grid grid-flow-col"
-              }`}
+              className={`${isActive ? "bg-gradient-to-r from-primary/30 to-primary/20 text-base-content shadow-lg ring-1 ring-primary/30" : "text-base-content/80"} relative transition-all duration-200 hover:bg-base-200/60 hover:shadow-md focus:!bg-base-200/70 active:!text-neutral ${mobile ? "py-2 px-4 text-sm rounded-xl gap-2 flex items-center" : "py-2 px-3 text-sm rounded-full gap-2 grid grid-flow-col"}`}
             >
               {icon}
-              <span>{label}</span>
+              <span className="relative">
+                {label}
+                <span className={`absolute -bottom-1 left-0 h-0.5 rounded-full transition-all ${isActive ? "w-full bg-primary/70" : "w-0 group-hover:w-full bg-base-content/20"}`} />
+              </span>
             </Link>
           </li>
         );
@@ -54,9 +53,7 @@ export const HeaderMenuLinks = ({ mobile = false }: { mobile?: boolean }) => {
 export const Header = () => {
   const burgerMenuRef = useRef<HTMLDetailsElement>(null);
   useOutsideClick(burgerMenuRef, () => burgerMenuRef?.current?.removeAttribute("open"));
-  
-  const [activeChain, setActiveChain] = useState<'ethereum' | 'solana'>('ethereum');
-
+  const [activeChain, setActiveChain] = useState<"ethereum" | "solana">("ethereum");
   const { address } = useAccount();
   const { connected: solanaConnected } = useWallet();
 
@@ -77,65 +74,58 @@ export const Header = () => {
   }, [tokenBalanceRaw]);
 
   return (
-    <div className="sticky lg:static top-0 navbar bg-base-100 border-t-indigo-500 min-h-0 shrink-0 justify-between z-20 px-2 sm:px-4 shadow-sm">
-      {/* Mobile: Logo + Burger Menu */}
+    <div className="sticky lg:static top-0 navbar min-h-0 z-20 px-2 sm:px-4 border-b border-base-300/60 bg-gradient-to-b from-base-100/90 to-base-100/70 backdrop-blur-md">
       <div className="navbar-start w-auto lg:w-1/2">
-        {/* Mobile Logo - всегда видимый */}
-        <Link href="/" passHref className="flex lg:hidden items-center gap-1 mr-2 shrink-0">
-          <span className="font-bold text-sm">NotABot</span>
+        <Link href="/" passHref className="flex lg:hidden items-center gap-2 mr-2 shrink-0">
+          <span className="inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-bold bg-base-200/70 ring-1 ring-base-300/70 shadow-sm">
+            <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded-md">NA</span>
+            NotABot
+          </span>
         </Link>
-        
-        {/* Desktop Logo */}
-        <Link href="/" passHref className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0">
-          <div className="flex flex-col">
-            <span className="font-bold leading-tight">NotABot</span>
-            <span className="text-xs opacity-70">One source, More blockchain</span>
+        <Link href="/" passHref className="hidden lg:flex items-center gap-3 ml-2 mr-6 shrink-0">
+          <div className="flex items-center justify-center h-9 w-9 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 ring-1 ring-primary/30 shadow-md">
+            <span className="font-black text-sm text-primary">NA</span>
+          </div>
+          <div className="flex flex-col leading-tight">
+            <span className="font-extrabold tracking-tight text-base">NotABot</span>
+            <span className="text-[11px] opacity-70">One source, More blockchain</span>
           </div>
         </Link>
-
-        {/* Mobile Burger Menu */}
         <details className="dropdown dropdown-bottom lg:hidden" ref={burgerMenuRef}>
-          <summary className="btn btn-ghost btn-sm hover:bg-transparent">
+          <summary className="btn btn-ghost btn-sm hover:bg-base-200/60 rounded-xl">
             <Bars3Icon className="h-5 w-5" />
           </summary>
-          <ul className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow-lg border border-base-300 mt-2">
+          <ul className="dropdown-content menu bg-base-100/95 rounded-2xl z-[1] w-60 p-2 shadow-2xl border border-base-300/70 mt-2 backdrop-blur-md">
             <HeaderMenuLinks mobile={true} />
           </ul>
         </details>
-
-        {/* Desktop Navigation */}
         <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">
           <HeaderMenuLinks />
         </ul>
       </div>
-
-      {/* Right side: Chain selector + Wallet */}
       <div className="navbar-end flex-nowrap gap-1 sm:gap-2">
-        {/* Chain Selector - компактный на мобильных */}
-        <div className="join join-horizontal">
-          <button 
-            className={`join-item btn btn-xs sm:btn-sm ${activeChain === 'ethereum' ? 'btn-primary' : 'btn-ghost'}`}
-            onClick={() => setActiveChain('ethereum')}
+        <div className="join join-horizontal rounded-full ring-1 ring-base-300/70 bg-base-200/60 backdrop-blur-sm shadow-sm">
+          <button
+            className={`join-item btn btn-xs sm:btn-sm rounded-l-full ${activeChain === "ethereum" ? "btn-primary shadow-md" : "btn-ghost text-base-content/80"}`}
+            onClick={() => setActiveChain("ethereum")}
           >
             <span className="hidden sm:inline">ETH</span>
             <span className="sm:hidden">E</span>
           </button>
-          <button 
-            className={`join-item btn btn-xs sm:btn-sm ${activeChain === 'solana' ? 'btn-primary' : 'btn-ghost'}`}
-            onClick={() => setActiveChain('solana')}
+          <button
+            className={`join-item btn btn-xs sm:btn-sm rounded-r-full ${activeChain === "solana" ? "btn-primary shadow-md" : "btn-ghost text-base-content/80"}`}
+            onClick={() => setActiveChain("solana")}
           >
             <span className="hidden sm:inline">SOL</span>
             <span className="sm:hidden">S</span>
           </button>
         </div>
-
-        {/* Token Balance - скрыт на очень маленьких экранах */}
-        {activeChain === 'ethereum' ? (
+        {activeChain === "ethereum" ? (
           <>
             {HMT_ADDRESS && address ? (
-              <div className="hidden sm:flex items-center gap-1">
-                <div className="badge badge-outline badge-sm">{HMT_SYMBOL}</div>
-                <div className="font-mono text-xs">{parseFloat(tokenBalance).toFixed(2)}</div>
+              <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-xl bg-base-200/60 ring-1 ring-base-300/70 backdrop-blur-sm">
+                <div className="badge badge-primary badge-outline badge-sm">{HMT_SYMBOL}</div>
+                <div className="font-mono text-xs tabular-nums">{parseFloat(tokenBalance).toFixed(2)}</div>
               </div>
             ) : null}
             <div className="min-w-0">
@@ -144,7 +134,7 @@ export const Header = () => {
           </>
         ) : (
           <div className="min-w-0">
-            <WalletMultiButton style={{ height: '32px', fontSize: '12px' }} />
+            <WalletMultiButton className="!h-8 sm:!h-9 !rounded-full !px-3 !text-xs !bg-gradient-to-r !from-primary/80 !to-primary !text-primary-content !border-0 !shadow-lg hover:!brightness-110 active:!brightness-95 transition-all" style={{ height: "36px", fontSize: "12px" }} />
           </div>
         )}
       </div>

@@ -119,6 +119,7 @@ const cssStyles = `
     height: 100%;
     transform-style: preserve-3d;
     animation: rotateCube 20s linear infinite;
+    will-change: transform;
   }
 
   .cubeFace {
@@ -131,7 +132,7 @@ const cssStyles = `
     display: flex;
     align-items: center;
     justify-content: center;
-    backface-visibility: visible;
+    backface-visibility: hidden;
     left: 50px; top: 50px; /* Center in wrapper */
   }
 
@@ -146,15 +147,18 @@ const cssStyles = `
     left: 100px; top: 100px;
   }
 
-  .faceFront  { transform: rotateY(0deg) translateZ(100px); }
-  .faceBack   { transform: rotateY(180deg) translateZ(100px); }
-  .faceRight  { transform: rotateY(90deg) translateZ(100px); }
-  .faceLeft   { transform: rotateY(-90deg) translateZ(100px); }
-  .faceTop    { transform: rotateX(90deg) translateZ(100px); }
-  .faceBottom { transform: rotateX(-90deg) translateZ(100px); }
+ /* Outer cube */
+ .faceFront  { transform: rotateY(0deg) translateZ(102px); }
+ .faceBack   { transform: rotateY(180deg) translateZ(102px); }
+ .faceRight  { transform: rotateY(90deg) translateZ(102px); }
+ .faceLeft   { transform: rotateY(-90deg) translateZ(102px); }
+ .faceTop    { transform: rotateX(90deg) translateZ(102px); }
+ .faceBottom { transform: rotateX(-90deg) translateZ(102px); }
 
-  .innerFront  { transform: rotateY(0deg) translateZ(50px); }
-  .innerBack   { transform: rotateY(180deg) translateZ(50px); }
+ /* Inner cube */
+ .innerFront  { transform: rotateY(0deg) translateZ(48px); }
+ .innerBack   { transform: rotateY(180deg) translateZ(48px); }
+ /* и так далее для остальных */
   .innerRight  { transform: rotateY(90deg) translateZ(50px); }
   .innerLeft   { transform: rotateY(-90deg) translateZ(50px); }
   .innerTop    { transform: rotateX(90deg) translateZ(50px); }
@@ -434,7 +438,7 @@ export default function NotABotV2() {
         <StarBackground />
       </div>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-20">
+      <main className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-20">
         
         {/* --- HERO SECTION --- */}
         <motion.section 

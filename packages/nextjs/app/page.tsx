@@ -365,7 +365,7 @@ const Home: NextPage = () => {
         <div className={styles.heroOverlay} />
         <motion.div className={styles.heroContent} initial="hidden" animate="show" variants={stagger}>
           <motion.div variants={fadeUp} className={styles.badge}>Stripe for Web3 Identity</motion.div>
-          <motion.h1 variants={fadeUp} className={styles.title}>NotABot</motion.h1>
+          <motion.h1 variants={fadeUp} className={styles.title}>NeoBot</motion.h1>
           <motion.p variants={fadeUp} className={styles.subtitle}>One source, More blockchain. Every proof-of-humanity source.</motion.p>
           <motion.div variants={fadeUp} className={styles.ctaRow}>
             <Link href="/docs" className={styles.ctaPrimary}>

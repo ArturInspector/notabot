@@ -6,7 +6,7 @@ import "~~/styles/globals.css";
 import { getMetadata } from "~~/utils/scaffold-eth/getMetadata";
 
 export const metadata = getMetadata({
-  title: "NotABot",
+  title: "NeoBot",
   description:
     "Stripe for Web3 Identity - Universal Proof-of-Humanity Aggregator",
 });

@@ -46,7 +46,7 @@ export const menuLinks: HeaderMenuLink[] = [
     icon: <ChartBarIcon className="h-4 w-4" />,
   },
   {
-    label: "NotABot 2.0",
+    label: "NeoBot 2.0",
     href: "/notabot",
     icon: <SparklesIcon className="h-4 w-4" />,
   },
@@ -302,7 +302,7 @@ export const Header = () => {
               NA
             </span>
             <span className="flex flex-col leading-tight">
-              <span className="text-[11px] font-semibold">NotABot</span>
+              <span className="text-[11px] font-semibold">NeoBot</span>
               <span className="text-[10px] text-slate-400">
                 One source, More blockchain
               </span>
@@ -323,7 +323,7 @@ export const Header = () => {
             </div>
             <div className="flex flex-col leading-tight">
               <span className="text-base font-extrabold tracking-tight">
-                NotABot
+                NeoBot
               </span>
               <span className="text-[11px] text-slate-300/80">
                 One source, More blockchain

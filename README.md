@@ -14,10 +14,12 @@ Verify once on ANY chain → Access everywhere
 [![Solana](https://img.shields.io/badge/Network-Solana%20Devnet-9945FF)](https://solana.com)
 [![Status Network](https://img.shields.io/badge/Network-Status%20Testnet-5B6CD9)](https://status.network)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Tests](https://img.shields.io/badge/Tests-26%2F26%20passing-brightgreen)](./packages/hardhat/test)
+[![CI](https://img.shields.io/badge/CI-Passing-brightgreen)](./.github/workflows/ci.yml)
 
 **🏆 ETH Bishkek 2024 Winners** | Now Expanding to Solana
 
-[🏗️ Architecture](./ARCHITECTURE_DIAGRAM.md) • [📡 API Docs](./packages/backend/API.md) • [⚡ Solana Docs](./packages/solana/ARCHITECTURE.md)
+[🏗️ Architecture](./docs/ARCHITECTURE.md) • [📡 API Docs](./packages/backend/API.md) • [⚡ Solana Docs](./solana/ARCHITECTURE.md) • [🚀 Roadmap](./docs/4STEPSPROD.MD) • [🤝 Contributing](./CONTRIBUTING.md)
 
 </div>
 
@@ -253,24 +255,30 @@ See [SAFE.MD](./SAFE.MD) for details.
 
 ## 📚 Documentation
 
-- **[5-Minute Integration Guide](./INTEGRATION.md)** ← Start here!
-- [Architecture Overview](./contracts/ARCHITECTURE.MD)
+- **[5-Minute Integration Guide](./docs/INTEGRATION.md)** ← Start here!
+- [Architecture Overview](./docs/ARCHITECTURE.md)
+- [Production Roadmap](./docs/4STEPSPROD.MD)
+- [Honest Analysis](./docs/HONEST_ANALYSIS.md) - What needs improvement
 - [Backend API Reference](./packages/backend/API.md)
-- [Demo Script](./DEMO_SCRIPT.md)
+- [Demo Script](./docs/DEMO_SCRIPT.md)
 - [Security Design](./SAFE.MD)
-- [Main Idea & Pitch](./MAIN_IDEA.MD)
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md)
+We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 **Key Areas:**
-- New verification adapters
-- Frontend UI improvements
-- Security audits
-- Documentation
+- 🆕 New verification adapters
+- 🎨 Frontend UI improvements
+- 🔒 Security audits
+- 📚 Documentation
+- 🧪 Test coverage
+
+**Contributors:** See [CONTRIBUTORS.md](./CONTRIBUTORS.md) for the full list.
+
+**Found a security issue?** See [SECURITY.md](./SECURITY.md) for responsible disclosure.
 
 ---
 

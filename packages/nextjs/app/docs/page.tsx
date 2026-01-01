@@ -73,7 +73,7 @@ export default function Docs() {
         collapsedWidth={0}
       >
         <div className={styles.brand}>
-          <div className={styles.brandTitle}>NeoBot Docs</div>
+          <div className={styles.brandTitle}>NotABot Docs</div>
           <div className={styles.brandSub}>Sybil-resistant contracts</div>
         </div>
         <Menu
@@ -97,7 +97,7 @@ export default function Docs() {
                   <div className={styles.heroGrid}>
                     <div>
                       <Title level={1} className={styles.h1}>
-                        NeoBot Integration Guide
+                        NotABot Integration Guide
                       </Title>
                       <Paragraph className={styles.lead}>
                         Like OpenZeppelin, but for sybil resistance. Copy HumanityProtected mixin from GitHub, 
@@ -350,7 +350,7 @@ contract YourContract is HumanityProtected {
                     Bayesian Aggregation
                   </Title>
                   <Paragraph className={styles.di1}>
-                    NeoBot uses Bayes' theorem to combine probabilities from multiple independent verification sources. 
+                    NotABot uses Bayes' theorem to combine probabilities from multiple independent verification sources. 
                     Each source provides an independent estimate of the probability that a user is human.
                   </Paragraph>
                   <Divider className={styles.divider} />

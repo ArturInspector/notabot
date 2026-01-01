@@ -46,7 +46,7 @@ export const menuLinks: HeaderMenuLink[] = [
     icon: <ChartBarIcon className="h-4 w-4" />,
   },
   {
-    label: "NeoBot 2.0",
+    label: "NotABot 2.0",
     href: "/notabot",
     icon: <SparklesIcon className="h-4 w-4" />,
   },
@@ -299,10 +299,10 @@ export const Header = () => {
             "
           >
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-[radial-gradient(circle_at_30%_0,#7c5cff,#222a63)] text-[11px] font-black text-slate-50 shadow-[0_12px_30px_rgba(15,23,42,0.8)]">
-              NA
+              NB
             </span>
             <span className="flex flex-col leading-tight">
-              <span className="text-[11px] font-semibold">NeoBot</span>
+              <span className="text-[11px] font-semibold">NotABot</span>
               <span className="text-[10px] text-slate-400">
                 One source, More blockchain
               </span>
@@ -319,11 +319,11 @@ export const Header = () => {
             "
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[radial-gradient(circle_at_30%_0,#7c5cff,#202654)] ring-1 ring-indigo-400/70 shadow-[0_15px_35px_rgba(15,23,42,0.95)]">
-              <span className="text-sm font-black text-slate-50">NA</span>
+              <span className="text-sm font-black text-slate-50">NB</span>
             </div>
             <div className="flex flex-col leading-tight">
               <span className="text-base font-extrabold tracking-tight">
-                NeoBot
+                NotABot
               </span>
               <span className="text-[11px] text-slate-300/80">
                 One source, More blockchain

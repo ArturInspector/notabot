@@ -416,7 +416,7 @@ const VerificationDemo = () => {
 
 // --- MAIN PAGE ---
 
-export default function NeoBotV2() {
+export default function NotABotV2() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
   
@@ -471,7 +471,7 @@ export default function NeoBotV2() {
               className="text-lg text-slate-400 max-w-lg leading-relaxed mb-8"
             >
               One-time KYC is dead. Accounts are sold for $500 in 2 minutes. 
-              NeoBot verifies <span className="text-white font-semibold">every single transaction</span> using ZK proofs. 
+              NotABot verifies <span className="text-white font-semibold">every single transaction</span> using ZK proofs. 
               <br /><br />
               Stop feeding the bot farms. Start rewarding humans.
             </motion.p>
@@ -604,7 +604,7 @@ export default function NeoBotV2() {
                 </div>
                 <pre className="overflow-x-auto">
 {`function claimAirdrop(uint256 amount) external {
-  // 1. Verify NeoBot proof
+  // 1. Verify NotABot proof
   notabot.verifyTransaction(msg.sender);
   
   // 2. Execute Logic
@@ -745,9 +745,9 @@ export default function NeoBotV2() {
 
       <footer className="border-t border-white/10 bg-black py-12 relative z-10">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-           <div className="text-2xl font-bold tracking-tighter">NeoBot.</div>
+           <div className="text-2xl font-bold tracking-tighter">NotABot.</div>
            <div className="text-xs text-slate-500">
-              &copy; 2024 NeoBot Inc. Built for the real ones.
+              &copy; 2025 NotABot Inc. Built for the real ones.
            </div>
         </div>
       </footer>

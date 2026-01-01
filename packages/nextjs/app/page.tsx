@@ -181,7 +181,7 @@ const Home: NextPage = () => {
   const handleVerify = async (
     source: "gitcoin" | "poh" | "brightid",
     loadingSetter: (v: boolean) => void,
-    verifiedSetter: (v: boolean),
+    verifiedSetter: (v: boolean) => void,
     verifiedState: boolean,
     encoder: any,
     adapterAddress: `0x${string}`,

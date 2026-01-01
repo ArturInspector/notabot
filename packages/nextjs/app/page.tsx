@@ -10,7 +10,7 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import toast, { Toaster } from "react-hot-toast";
 import "katex/dist/katex.min.css";
 import { IDKitWidget, ISuccessResult } from "@worldcoin/idkit";
-import { decodeAbiParameters, encodeAbiParameters, parseAbiParameters } from "viem";
+import { decodeAbiParameters, encodeAbiParameters, parseAbiParameters, type Address } from "viem";
 import { writeContract, waitForTransactionReceipt } from "wagmi/actions";
 import { BACKEND_URL, getJson, postJson } from "../utils/api";
 import { encodeGitcoinProof, encodePohProof, encodeBrightIdProof } from "../utils/encode";
@@ -184,7 +184,7 @@ const Home: NextPage = () => {
     verifiedSetter: (v: boolean) => void,
     verifiedState: boolean,
     encoder: any,
-    adapterAddress: `0x${string}`,
+    adapterAddress: Address,
     storageKey: string,
     label: string
   ) => {

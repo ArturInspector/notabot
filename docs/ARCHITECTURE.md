@@ -347,7 +347,7 @@ solana/programs/notabot/     → Rust/Anchor (Solana)
 
 ---
 
-## 🚀 Deployment Architecture
+## Deployment Architecture
 
 ### Current (MVP)
 
@@ -573,5 +573,7 @@ Alerts:
 
 ---
 
-**Built by NotABot Team | ETH Bishkek 2024 Winners | MIT License**
+**Built by NotABot Team | ETH Bishkek 2025 Winners | MIT License**
+**Be better**
+
 
